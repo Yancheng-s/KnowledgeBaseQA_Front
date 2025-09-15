@@ -44,21 +44,11 @@
           placeholder="请输入内容..."
         >
         <div class="absolute bottom-3 left-3 flex items-center gap-3">
-          <button 
-            class="!rounded-button text-gray-400 hover:text-gray-600"
-            :disabled="props.agentData.llm_image !== 'y'"
-            :class="{ 'opacity-50 cursor-not-allowed': props.agentData.llm_image !== 'y', 'hover:text-gray-600': props.agentData.llm_img === 'y' }"
-            @click="openFolder"
-          >
-            <i class="fas fa-image text-sm"></i>
+          <button class="!rounded-button text-gray-400 hover:text-gray-600">
+            <i class="fas fa-link text-sm" @click="openFolder"></i>
           </button>
-          <button 
-            class="!rounded-button text-gray-400 hover:text-gray-600"
-            :disabled="props.agentData.llm_file !== 'y'"
-            :class="{ 'opacity-50 cursor-not-allowed': props.agentData.llm_file !== 'y', 'hover:text-gray-600': props.agentData.llm_file === 'y' }"
-            @click="openFolder"
-          >
-            <i class="fas fa-file"></i>
+          <button class="!rounded-button text-gray-400 hover:text-gray-600">
+            <i class="fas fa-file" @click="openFolder"></i>
           </button>
         </div>
         <div class="absolute bottom-3 right-3 flex items-center gap-3">
@@ -102,15 +92,6 @@ const props = defineProps({
 //     timer.value = null;
 //   }
 // });
-
-// 计算属性用于判断按钮状态
-const isImageEnabled = computed(() => {
-  return props.agentData.llm_image === 'y';
-});
-
-const isFileEnabled = computed(() => {
-  return props.agentData.llm_file === 'y';
-});
 
 const inputText = ref('');
 const inputLength = computed(() => {

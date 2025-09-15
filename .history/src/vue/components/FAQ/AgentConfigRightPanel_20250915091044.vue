@@ -46,8 +46,8 @@
         <div class="absolute bottom-3 left-3 flex items-center gap-3">
           <button 
             class="!rounded-button text-gray-400 hover:text-gray-600"
-            :disabled="props.agentData.llm_image !== 'y'"
-            :class="{ 'opacity-50 cursor-not-allowed': props.agentData.llm_image !== 'y', 'hover:text-gray-600': props.agentData.llm_img === 'y' }"
+            :disabled="props.agentData.llm_img !== 'y'"
+            :class="{ 'opacity-50 cursor-not-allowed': props.agentData.llm_img !== 'y', 'hover:text-gray-600': props.agentData.llm_img === 'y' }"
             @click="openFolder"
           >
             <i class="fas fa-image text-sm"></i>
@@ -86,22 +86,22 @@ const props = defineProps({
 })
 
 // 定时器引用
-// const timer = ref(null);
+const timer = ref(null);
 
 // 开始定时打印
-// onMounted(() => {
-//   timer.value = setInterval(() => {
-//     console.log('AgentConfigRightPanel - 当前agentData:', props.agentData);
-//   }, 3000); // 每3秒打印一次，可根据需要调整时间间隔
-// });
+onMounted(() => {
+  timer.value = setInterval(() => {
+    console.log('AgentConfigRightPanel - 当前agentData:', props.agentData);
+  }, 3000); // 每3秒打印一次，可根据需要调整时间间隔
+});
 
 // 清除定时器，防止内存泄漏
-// onBeforeUnmount(() => {
-//   if (timer.value) {
-//     clearInterval(timer.value);
-//     timer.value = null;
-//   }
-// });
+onBeforeUnmount(() => {
+  if (timer.value) {
+    clearInterval(timer.value);
+    timer.value = null;
+  }
+});
 
 // 计算属性用于判断按钮状态
 const isImageEnabled = computed(() => {
