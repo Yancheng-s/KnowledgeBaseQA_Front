@@ -63,7 +63,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed } from 'vue';
 
 const props = defineProps({
   agentData: {
@@ -71,24 +71,6 @@ const props = defineProps({
     default: () => ({})
   }
 })
-
-// 定时器引用
-// const timer = ref(null);
-
-// 开始定时打印
-// onMounted(() => {
-//   timer.value = setInterval(() => {
-//     console.log('AgentConfigRightPanel - 当前agentData:', props.agentData);
-//   }, 3000); // 每3秒打印一次，可根据需要调整时间间隔
-// });
-
-// 清除定时器，防止内存泄漏
-// onBeforeUnmount(() => {
-//   if (timer.value) {
-//     clearInterval(timer.value);
-//     timer.value = null;
-//   }
-// });
 
 const inputText = ref('');
 const inputLength = computed(() => {

@@ -89,7 +89,7 @@
           class="right-panel flex-1 bg-white min-w-[600px]"
         >
           <!-- 右侧内容放这里 -->
-          <AgentConfigRightPanel :agent-data="agentData" />
+          <AgentConfigRightPanel />
         </div>
       </div>
     </div>
@@ -97,13 +97,11 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref } from 'vue'
 import axios from 'axios'
 import agentIcon from '@/img/agent/返回.png'
 import AgentConfigLeftPanel from '@/vue/components/FAQ/AgentConfigLeftPanel.vue'
 import AgentConfigRightPanel from '@/vue/components/FAQ/AgentConfigRightPanel.vue'
-
-const agentData = reactive({}) // 用于存储从服务器获取的agent数据
 
 // 添加保存时间变量
 const lastSavedTime = ref('12:10:7')
@@ -119,8 +117,6 @@ function getCurrentTime() {
 
 function onFormChange(data) {
   saveAgent(data)
-  // 将数据传递给子组件
-  Object.assign(agentData, data)
 }
 
 async function saveAgent(form) {
