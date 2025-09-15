@@ -4,7 +4,7 @@
     <nav class="bg-white shadow-sm">
       <div class="max-w-7xl px-4 h-16 flex items-center">
         <div class="flex items-center space-x-2 text-gray-600">
-          <span>模型</span>
+          <span>模型广场</span>
           <i class="fas fa-chevron-right text-xs"></i>
           <!-- 修改面包屑显示逻辑 -->
           <span class="text-blue-600">{{ showCreateForm ? '创建智能体' : currentFolder }}</span>
