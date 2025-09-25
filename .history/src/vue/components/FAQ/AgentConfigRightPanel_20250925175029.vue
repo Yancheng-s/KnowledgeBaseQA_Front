@@ -9,7 +9,6 @@
         </div>
       </div>
 
-      <!-- 将 v-else 放在紧跟 v-if 的下一个兄弟节点上 -->
       <div v-else class="messages-list">
         <div v-for="message in messages" :key="message.id" class="message-item">
           {{ message.content }}
@@ -154,7 +153,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { uploadImage, uploadFile, deleteToolCache } from '@/api/agent'
+import { uploadImage, uploadFile, deleteToolCache, sendMessage } from '@/api/agent'
 
 const uploadedFiles = ref([]) // 存储已上传文件对象 { name, size, type, preview }
 
@@ -180,10 +179,10 @@ watch(
   (newVal) => {
     // 使用深拷贝确保对象内部变化也能被检测到
     localAgentData.value = JSON.parse(JSON.stringify(newVal || {}))
-    console.log('=== agentData 更新 ===')
-    console.log('时间:', new Date().toLocaleTimeString())
-    console.log('新值:', localAgentData.value)
-    console.log('====================')
+    // console.log('=== agentData 更新 ===')
+    // console.log('时间:', new Date().toLocaleTimeString())
+    // console.log('新值:', localAgentData.value)
+    // console.log('====================')
   },
   { deep: true, immediate: true }
 )

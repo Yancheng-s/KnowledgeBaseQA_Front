@@ -2,14 +2,21 @@
   <div class="agent-config-wrapper">
     <!-- 消息列表区域 -->
     <div class="messages-container">
-      <div v-if="messages.length === 0" class="empty-state">
-        <div class="empty-content">
-          <img src="@/img/agent/智能体.png" alt="空状态图片" class="empty-image" />
-          <p class="empty-text">PlayGround</p>
+      <div v-if="messages.length > 0" class="messages-list">
+        <div 
+          v-for="message in messages" 
+          :key="message.id" 
+          class="message-item"
+          :class="{
+            'user-message': message.role === 'user',
+            'assistant-message': message.role === 'assistant',
+            'system-message': message.role === 'system'
+          }"
+        >
+          {{ message.content }}
         </div>
       </div>
 
-      <!-- 将 v-else 放在紧跟 v-if 的下一个兄弟节点上 -->
       <div v-else class="messages-list">
         <div v-for="message in messages" :key="message.id" class="message-item">
           {{ message.content }}
@@ -154,7 +161,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { uploadImage, uploadFile, deleteToolCache } from '@/api/agent'
+import { uploadImage, uploadFile, deleteToolCache, sendMessage } from '@/api/agent'
 
 const uploadedFiles = ref([]) // 存储已上传文件对象 { name, size, type, preview }
 
@@ -180,10 +187,10 @@ watch(
   (newVal) => {
     // 使用深拷贝确保对象内部变化也能被检测到
     localAgentData.value = JSON.parse(JSON.stringify(newVal || {}))
-    console.log('=== agentData 更新 ===')
-    console.log('时间:', new Date().toLocaleTimeString())
-    console.log('新值:', localAgentData.value)
-    console.log('====================')
+    // console.log('=== agentData 更新 ===')
+    // console.log('时间:', new Date().toLocaleTimeString())
+    // console.log('新值:', localAgentData.value)
+    // console.log('====================')
   },
   { deep: true, immediate: true }
 )
@@ -205,10 +212,50 @@ const imagePreview = ref('')     // 图片预览地址（base64）
 const uploading = ref(false)
 
 /* ---------- 方法 ---------- */
-const handleSubmit = () => {
-  if (inputText.value.trim()) {
-    messages.value.push({ id: Date.now(), content: inputText.value })
-    inputText.value = ''
+const handleSubmit = async () => {
+  if (!inputText.value.trim() || isModelNotSelected.value) return
+  
+  const message = inputText.value.trim()
+  
+  // 1. 将输入框的值添加到 localAgentData，键名为 message
+  localAgentData.value.message = message
+  
+  // 2. 将用户消息添加到对话记录
+  const userMessage = { 
+    id: Date.now(), 
+    content: message, 
+    role: 'user' 
+  }
+  messages.value.push(userMessage)
+  
+  // 清空输入框
+  inputText.value = ''
+  
+  try {
+    // 3. 向后端发送请求
+    // 注意：这里需要根据实际的后端 API 接口进行调整
+    const response = await sendMessage({
+      ...localAgentData.value,
+      message: message
+    })
+    
+    // 4. 将返回值添加到对话记录
+    const assistantMessage = {
+      id: Date.now() + 1,
+      content: response.data.reply || response.data.result || '无回复内容',
+      role: 'assistant'
+    }
+    messages.value.push(assistantMessage)
+    
+  } catch (error) {
+    console.error('发送消息失败:', error)
+    // 错误处理：添加错误消息到对话记录
+    const errorMessage = {
+      id: Date.now() + 1,
+      content: '消息发送失败，请稍后重试',
+      role: 'system'
+    }
+    messages.value.push(errorMessage)
   }
 }
 
@@ -405,5 +452,21 @@ input::placeholder {
 .uploaded-files-container {
   margin: 0 70px 0 80px;
   flex-shrink: 0;
+}
+
+/* 在 <style scoped> 中添加 */
+.user-message {
+  background-color: #dbeafe;
+  text-align: right;
+}
+
+.assistant-message {
+  background-color: #f8f9fa;
+}
+
+.system-message {
+  background-color: #fee2e2;
+  color: #ef4444;
+  text-align: center;
 }
 </style>

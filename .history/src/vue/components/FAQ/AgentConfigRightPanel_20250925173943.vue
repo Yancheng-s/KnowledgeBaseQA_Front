@@ -9,7 +9,6 @@
         </div>
       </div>
 
-      <!-- 将 v-else 放在紧跟 v-if 的下一个兄弟节点上 -->
       <div v-else class="messages-list">
         <div v-for="message in messages" :key="message.id" class="message-item">
           {{ message.content }}
@@ -106,10 +105,8 @@
       <div class="relative rounded-lg p-3 min-h-[120px] border border-gray-200">
         <textarea
           v-model="inputText"
-          :disabled="isModelNotSelected"
           class="w-full bg-transparent border-none outline-none text-gray-700 text-sm mb-8 resize-none"
-          :class="{ 'opacity-50 cursor-not-allowed': isModelNotSelected }"
-          :placeholder="isModelNotSelected ? '请先选择模型' : '请输入内容...'"
+          placeholder="请输入内容..."
           rows="3"
         ></textarea>
         <div class="absolute bottom-3 left-3 flex items-center gap-3">
@@ -140,8 +137,6 @@
           <span class="text-xs text-gray-400">{{ inputLength }}/129024</span>
           <button
             class="!rounded-button bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5"
-            :disabled="isModelNotSelected"
-            :class="{ 'opacity-50 cursor-not-allowed': isModelNotSelected }"
             @click="handleSubmit"
           >
             <i class="fas fa-arrow-up text-sm"></i>

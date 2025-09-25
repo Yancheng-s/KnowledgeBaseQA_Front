@@ -9,7 +9,6 @@
         </div>
       </div>
 
-      <!-- 将 v-else 放在紧跟 v-if 的下一个兄弟节点上 -->
       <div v-else class="messages-list">
         <div v-for="message in messages" :key="message.id" class="message-item">
           {{ message.content }}

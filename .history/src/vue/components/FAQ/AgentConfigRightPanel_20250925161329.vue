@@ -9,7 +9,6 @@
         </div>
       </div>
 
-      <!-- 将 v-else 放在紧跟 v-if 的下一个兄弟节点上 -->
       <div v-else class="messages-list">
         <div v-for="message in messages" :key="message.id" class="message-item">
           {{ message.content }}
@@ -22,81 +21,81 @@
       <div class="flex flex-wrap gap-2 mb-2">
         <div v-for="(file, index) in uploadedFiles" :key="index" class="file-item">
           <!-- 图片文件直接展示 -->
-          <div v-if="isImageFile(file.name)" class="relative group">
-            <!-- 上传中状态 -->
-            <div v-if="file.status === 'uploading'" class="w-16 h-16 bg-gray-200 rounded-lg border border-gray-300 flex items-center justify-center">
-              <div class="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-            
-            <!-- 上传成功状态 -->
-            <img 
-              v-else-if="file.status === 'success'"
-              :src="file.preview" 
-              alt="preview" 
-              class="w-16 h-16 object-cover rounded-lg border border-gray-200" 
-            />
-            
-            <!-- 上传失败状态 -->
-            <div v-else class="w-16 h-16 bg-red-100 rounded-lg border border-red-300 flex items-center justify-center">
-              <i class="fas fa-exclamation-circle text-red-500"></i>
-            </div>
-            
-            <!-- 删除按钮 -->
-            <button 
-              v-if="file.status === 'success'"
-              @click="removeFile(index)" 
-              class="absolute -top-1 -right-1 w-4 h-4 bg-gray-600 hover:bg-red-500 text-white rounded-full flex items-center justify-center text-xs transition-colors opacity-0 group-hover:opacity-100"
-            >
-              ×
-            </button>
-          </div>
+<div v-if="isImageFile(file.name)" class="relative group">
+  <!-- 上传中状态 -->
+  <div v-if="file.status === 'uploading'" class="w-16 h-16 bg-gray-200 rounded-lg border border-gray-300 flex items-center justify-center">
+    <div class="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+  </div>
+  
+  <!-- 上传成功状态 -->
+  <img 
+    v-else-if="file.status === 'success'"
+    :src="file.preview" 
+    alt="preview" 
+    class="w-16 h-16 object-cover rounded-lg border border-gray-200" 
+  />
+  
+  <!-- 上传失败状态 -->
+  <div v-else class="w-16 h-16 bg-red-100 rounded-lg border border-red-300 flex items-center justify-center">
+    <i class="fas fa-exclamation-circle text-red-500"></i>
+  </div>
+  
+  <!-- 删除按钮 -->
+  <button 
+    v-if="file.status === 'success'"
+    @click="removeFile(index)" 
+    class="absolute -top-1 -right-1 w-4 h-4 bg-gray-600 hover:bg-red-500 text-white rounded-full flex items-center justify-center text-xs transition-colors opacity-0 group-hover:opacity-100"
+  >
+    ×
+  </button>
+</div>
 
-          <!-- 非图片文件显示卡片 -->
-          <div v-else class="relative group">
-            <!-- 上传中状态 -->
-            <div v-if="file.status === 'uploading'" class="flex items-center gap-2 px-3 py-3 bg-gray-200 rounded-lg border border-gray-300 min-w-0 w-48">
-              <div class="flex-shrink-0">
-                <div class="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-              </div>
-              <div class="flex-1 min-w-0">
-                <div class="font-medium text-sm text-gray-700 truncate max-w-[140px]">{{ file.name }}</div>
-                <div class="text-xs text-gray-500">上传中...</div>
-              </div>
-            </div>
-            
-            <!-- 上传成功状态 -->
-            <div v-else-if="file.status === 'success'" class="flex items-center gap-2 px-3 py-3 bg-gray-50 rounded-lg border border-gray-200 min-w-0">
-              <!-- 文件图标 -->
-              <div class="flex-shrink-0">
-                <i :class="[getFileIcon(file.name), 'text-lg']" :style="{ color: getFileIconColor(file.name) }"></i>
-              </div>
-              
-              <!-- 文件信息 -->
-              <div class="flex-1 min-w-0">
-                <div class="font-medium text-sm text-gray-900 truncate max-w-[140px]">{{ file.name }}</div>
-                <div class="text-xs text-gray-500">{{ formatFileSize(file.size) }}</div>
-              </div>
+<!-- 非图片文件显示卡片 -->
+<div v-else class="relative group">
+  <!-- 上传中状态 -->
+  <div v-if="file.status === 'uploading'" class="flex items-center gap-2 px-3 py-3 bg-gray-200 rounded-lg border border-gray-300 min-w-0 w-48">
+    <div class="flex-shrink-0">
+      <div class="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+    <div class="flex-1 min-w-0">
+      <div class="font-medium text-sm text-gray-700 truncate max-w-[140px]">{{ file.name }}</div>
+      <div class="text-xs text-gray-500">上传中...</div>
+    </div>
+  </div>
+  
+  <!-- 上传成功状态 -->
+  <div v-else-if="file.status === 'success'" class="flex items-center gap-2 px-3 py-3 bg-gray-50 rounded-lg border border-gray-200 min-w-0">
+    <!-- 文件图标 -->
+    <div class="flex-shrink-0">
+      <i :class="[getFileIcon(file.name), 'text-lg']" :style="{ color: getFileIconColor(file.name) }"></i>
+    </div>
+    
+    <!-- 文件信息 -->
+    <div class="flex-1 min-w-0">
+      <div class="font-medium text-sm text-gray-900 truncate max-w-[140px]">{{ file.name }}</div>
+      <div class="text-xs text-gray-500">{{ formatFileSize(file.size) }}</div>
+    </div>
 
-              <!-- 删除按钮 -->
-              <button 
-                @click="removeFile(index)" 
-                class="absolute -top-1 -right-1 w-4 h-4 bg-gray-600 hover:bg-red-500 text-white rounded-full flex items-center justify-center text-xs transition-colors opacity-0 group-hover:opacity-100"
-              >
-                ×
-              </button>
-            </div>
-            
-            <!-- 上传失败状态 -->
-            <div v-else class="flex items-center gap-2 px-3 py-3 bg-red-100 rounded-lg border border-red-300 min-w-0">
-              <div class="flex-shrink-0">
-                <i class="fas fa-exclamation-circle text-red-500 text-lg"></i>
-              </div>
-              <div class="flex-1 min-w-0">
-                <div class="font-medium text-sm text-red-800 truncate max-w-[140px]">{{ file.name }}</div>
-                <div class="text-xs text-red-600">上传失败</div>
-              </div>
-            </div>
-          </div>
+    <!-- 删除按钮 -->
+    <button 
+      @click="removeFile(index)" 
+      class="absolute -top-1 -right-1 w-4 h-4 bg-gray-600 hover:bg-red-500 text-white rounded-full flex items-center justify-center text-xs transition-colors opacity-0 group-hover:opacity-100"
+    >
+      ×
+    </button>
+  </div>
+  
+  <!-- 上传失败状态 -->
+  <div v-else class="flex items-center gap-2 px-3 py-3 bg-red-100 rounded-lg border border-red-300 min-w-0">
+    <div class="flex-shrink-0">
+      <i class="fas fa-exclamation-circle text-red-500 text-lg"></i>
+    </div>
+    <div class="flex-1 min-w-0">
+      <div class="font-medium text-sm text-red-800 truncate max-w-[140px]">{{ file.name }}</div>
+      <div class="text-xs text-red-600">上传失败</div>
+    </div>
+  </div>
+</div>
         </div>
       </div>
     </div>
@@ -106,10 +105,8 @@
       <div class="relative rounded-lg p-3 min-h-[120px] border border-gray-200">
         <textarea
           v-model="inputText"
-          :disabled="isModelNotSelected"
           class="w-full bg-transparent border-none outline-none text-gray-700 text-sm mb-8 resize-none"
-          :class="{ 'opacity-50 cursor-not-allowed': isModelNotSelected }"
-          :placeholder="isModelNotSelected ? '请先选择模型' : '请输入内容...'"
+          placeholder="请输入内容..."
           rows="3"
         ></textarea>
         <div class="absolute bottom-3 left-3 flex items-center gap-3">
@@ -140,8 +137,6 @@
           <span class="text-xs text-gray-400">{{ inputLength }}/129024</span>
           <button
             class="!rounded-button bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5"
-            :disabled="isModelNotSelected"
-            :class="{ 'opacity-50 cursor-not-allowed': isModelNotSelected }"
             @click="handleSubmit"
           >
             <i class="fas fa-arrow-up text-sm"></i>
@@ -161,40 +156,17 @@ const uploadedFiles = ref([]) // 存储已上传文件对象 { name, size, type,
 // 添加上传状态相关变量
 const uploadStatus = ref({})
 
-// 创建一个响应式的本地副本用于跟踪变化
-const localAgentData = ref({})
-
 const props = defineProps({
   agentData: { type: Object, default: () => ({}) }
 })
 
-// 计算属性：判断 llm_api 是否为"暂未选择模型"
-const isModelNotSelected = computed(() => {
-  return props.agentData.llm_api === '暂未选择模型'
-})
-
-
-// 深度监听 props.agentData 的变化
-watch(
-  () => props.agentData,
-  (newVal) => {
-    // 使用深拷贝确保对象内部变化也能被检测到
-    localAgentData.value = JSON.parse(JSON.stringify(newVal || {}))
-    console.log('=== agentData 更新 ===')
-    console.log('时间:', new Date().toLocaleTimeString())
-    console.log('新值:', localAgentData.value)
-    console.log('====================')
-  },
-  { deep: true, immediate: true }
-)
-
-// 监听 llm_api 变化
-watch(
-  () => props.agentData.llm_api,
-  (newVal) => {
-    console.log('llm_api 变化:', newVal)
-  }
-)
+watch(() => props.agentData, (newVal, oldVal) => {
+  console.log('=== agentData 变化检测 ===')
+  console.log('当前时间:', new Date().toLocaleTimeString())
+  console.log('新值:', newVal)
+  console.log('旧值:', oldVal)
+  console.log('=== 变化检测结束 ===')
+}, { deep: true })
 
 /* ---------- 数据 ---------- */
 const inputText = ref('')
