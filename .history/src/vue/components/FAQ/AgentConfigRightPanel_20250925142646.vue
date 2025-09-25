@@ -21,80 +21,40 @@
       <div class="flex flex-wrap gap-2 mb-2">
         <div v-for="(file, index) in uploadedFiles" :key="index" class="file-item">
           <!-- 图片文件直接展示 -->
-<div v-if="isImageFile(file.name)" class="relative group">
-  <!-- 上传中状态 -->
-  <div v-if="file.status === 'uploading'" class="w-16 h-16 bg-gray-200 rounded-lg border border-gray-300 flex items-center justify-center">
-    <div class="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+          <div v-if="isImageFile(file.name)" class="relative">
+            <img 
+              :src="file.preview" 
+              alt="preview" 
+              class="w-16 h-16 object-cover rounded-lg border border-gray-200" 
+            />
+            <button 
+              @click="removeFile(index)" 
+              class="absolute -top-1 -right-1 w-4 h-4 bg-gray-600 hover:bg-red-500 text-white rounded-full flex items-center justify-center text-xs transition-colors"
+            >
+              ×
+            </button>
+          </div>
+          
+          <!-- 非图片文件显示卡片 -->
+<div v-else class="flex items-center gap-2 px-3 py-3 bg-gray-50 rounded-lg border border-gray-200 min-w-0 relative">
+  <!-- 文件图标 -->
+  <div class="flex-shrink-0">
+    <i :class="[getFileIcon(file.name), 'text-lg']" :style="{ color: getFileIconColor(file.name) }"></i>
   </div>
   
-  <!-- 上传成功状态 -->
-  <img 
-    v-else-if="file.status === 'success'"
-    :src="file.preview" 
-    alt="preview" 
-    class="w-16 h-16 object-cover rounded-lg border border-gray-200" 
-  />
-  
-  <!-- 上传失败状态 -->
-  <div v-else class="w-16 h-16 bg-red-100 rounded-lg border border-red-300 flex items-center justify-center">
-    <i class="fas fa-exclamation-circle text-red-500"></i>
+  <!-- 文件信息 -->
+  <div class="flex-1 min-w-0">
+    <div class="font-medium text-sm text-gray-900 truncate max-w-[140px]">{{ file.name }}</div>
+    <div class="text-xs text-gray-500">{{ formatFileSize(file.size) }}</div>
   </div>
-  
+
   <!-- 删除按钮 -->
   <button 
-    v-if="file.status === 'success'"
     @click="removeFile(index)" 
-    class="absolute -top-1 -right-1 w-4 h-4 bg-gray-600 hover:bg-red-500 text-white rounded-full flex items-center justify-center text-xs transition-colors opacity-0 group-hover:opacity-100"
+    class="absolute top-1 right-1 w-4 h-4 bg-gray-200 hover:bg-red-100 text-gray-600 hover:text-red-500 rounded-full flex items-center justify-center text-xs transition-colors"
   >
     ×
   </button>
-</div>
-
-<!-- 非图片文件显示卡片 -->
-<div v-else class="relative group">
-  <!-- 上传中状态 -->
-  <div v-if="file.status === 'uploading'" class="flex items-center gap-2 px-3 py-3 bg-gray-200 rounded-lg border border-gray-300 min-w-0 w-48">
-    <div class="flex-shrink-0">
-      <div class="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-    </div>
-    <div class="flex-1 min-w-0">
-      <div class="font-medium text-sm text-gray-700 truncate max-w-[140px]">{{ file.name }}</div>
-      <div class="text-xs text-gray-500">上传中...</div>
-    </div>
-  </div>
-  
-  <!-- 上传成功状态 -->
-  <div v-else-if="file.status === 'success'" class="flex items-center gap-2 px-3 py-3 bg-gray-50 rounded-lg border border-gray-200 min-w-0">
-    <!-- 文件图标 -->
-    <div class="flex-shrink-0">
-      <i :class="[getFileIcon(file.name), 'text-lg']" :style="{ color: getFileIconColor(file.name) }"></i>
-    </div>
-    
-    <!-- 文件信息 -->
-    <div class="flex-1 min-w-0">
-      <div class="font-medium text-sm text-gray-900 truncate max-w-[140px]">{{ file.name }}</div>
-      <div class="text-xs text-gray-500">{{ formatFileSize(file.size) }}</div>
-    </div>
-
-    <!-- 删除按钮 -->
-    <button 
-      @click="removeFile(index)" 
-      class="absolute -top-1 -right-1 w-4 h-4 bg-gray-600 hover:bg-red-500 text-white rounded-full flex items-center justify-center text-xs transition-colors opacity-0 group-hover:opacity-100"
-    >
-      ×
-    </button>
-  </div>
-  
-  <!-- 上传失败状态 -->
-  <div v-else class="flex items-center gap-2 px-3 py-3 bg-red-100 rounded-lg border border-red-300 min-w-0">
-    <div class="flex-shrink-0">
-      <i class="fas fa-exclamation-circle text-red-500 text-lg"></i>
-    </div>
-    <div class="flex-1 min-w-0">
-      <div class="font-medium text-sm text-red-800 truncate max-w-[140px]">{{ file.name }}</div>
-      <div class="text-xs text-red-600">上传失败</div>
-    </div>
-  </div>
 </div>
         </div>
       </div>
@@ -149,12 +109,9 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { uploadImage, uploadFile, deleteToolCache } from '@/api/agent'
+import { uploadImage, uploadFile } from '@/api/agent'
 
 const uploadedFiles = ref([]) // 存储已上传文件对象 { name, size, type, preview }
-
-// 添加上传状态相关变量
-const uploadStatus = ref({})
 
 const props = defineProps({
   agentData: { type: Object, default: () => ({}) }
@@ -187,28 +144,25 @@ const openImageUpload = () => {
 const handleImageSelect = (e) => {
   const file = e.target.files[0]
   if (!file) return
-  
-  // 添加到列表，设置上传状态
-  const fileIndex = uploadedFiles.value.length
-  uploadedFiles.value.push({
-    name: file.name,
-    size: file.size,
-    type: 'image',
-    preview: '',
-    status: 'uploading' // 添加上传状态
-  })
-  
+  selectedFile.value = file
+  uploading.value = true
   const reader = new FileReader()
   reader.onload = async (ev) => {
+    imagePreview.value = ev.target.result
     const base64 = ev.target.result
     try {
       await uploadImage({ image_data: base64, imagename: file.name })
-      // 成功后更新预览和状态
-      uploadedFiles.value[fileIndex].preview = base64
-      uploadedFiles.value[fileIndex].status = 'success'
+      // 成功后添加到已上传列表
+      uploadedFiles.value.push({
+        name: file.name,
+        size: file.size,
+        type: 'image',
+        preview: base64
+      })
     } catch (err) {
       console.error('图片上传失败:', err)
-      uploadedFiles.value[fileIndex].status = 'error'
+    } finally {
+      uploading.value = false
     }
   }
   reader.readAsDataURL(file)
@@ -228,25 +182,22 @@ const openFileUpload = () => {
 const handleFileSelect = (e) => {
   const file = e.target.files[0]
   if (!file) return
-  
-  // 添加到列表，设置上传状态
-  const fileIndex = uploadedFiles.value.length
-  uploadedFiles.value.push({
-    name: file.name,
-    size: file.size,
-    type: 'file',
-    status: 'uploading' // 添加上传状态
-  })
-  
+  selectedFile.value = file
+  uploading.value = true
   const reader = new FileReader()
   reader.onload = async (ev) => {
     try {
       await uploadFile({ file_data: ev.target.result, filename: file.name })
-      // 成功后更新状态
-      uploadedFiles.value[fileIndex].status = 'success'
+      // 成功后添加到已上传列表
+      uploadedFiles.value.push({
+        name: file.name,
+        size: file.size,
+        type: 'file'
+      })
     } catch (err) {
       console.error('文件上传失败:', err)
-      uploadedFiles.value[fileIndex].status = 'error'
+    } finally {
+      uploading.value = false
     }
   }
   reader.readAsDataURL(file)
@@ -262,19 +213,8 @@ function isImageFile(filename) {
 }
 
 // 删除文件
-const removeFile = async (index) => {
-  const file = uploadedFiles.value[index]
-  
-  try {
-    // 调用后端删除接口
-    await deleteToolCache({ filename: file.name })
-    
-    // 从本地列表移除文件
-    uploadedFiles.value.splice(index, 1)
-  } catch (error) {
-    console.error('删除文件失败:', error)
-    // 可以在这里添加错误处理逻辑，比如显示错误提示
-  }
+const removeFile = (index) => {
+  uploadedFiles.value.splice(index, 1)
 }
 
 /* ---- 工具函数 ---- */

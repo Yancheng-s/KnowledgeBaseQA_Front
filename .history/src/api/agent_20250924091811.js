@@ -17,26 +17,10 @@ export const addAgent = (data) => {
   });
 };
 
-export const uploadImage = (data) => {
-  return request({
-    url: '/imageUpload',
-    method: 'post',
-    data
-  });
-};
-
 export const uploadFile = (data) => {
   return request({
-    url: '/fileUpload',
+    url: '/fileupload',
     method: 'post',
-    data
-  });
-};
-
-export const deleteToolCache = (data) => {
-  return request({
-    url: '/deleteToolCache',
-    method: 'delete',
     data
   });
 };

@@ -149,7 +149,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { uploadImage, uploadFile, deleteToolCache } from '@/api/agent'
+import { uploadImage, uploadFile } from '@/api/agent'
 
 const uploadedFiles = ref([]) // 存储已上传文件对象 { name, size, type, preview }
 
@@ -262,19 +262,8 @@ function isImageFile(filename) {
 }
 
 // 删除文件
-const removeFile = async (index) => {
-  const file = uploadedFiles.value[index]
-  
-  try {
-    // 调用后端删除接口
-    await deleteToolCache({ filename: file.name })
-    
-    // 从本地列表移除文件
-    uploadedFiles.value.splice(index, 1)
-  } catch (error) {
-    console.error('删除文件失败:', error)
-    // 可以在这里添加错误处理逻辑，比如显示错误提示
-  }
+const removeFile = (index) => {
+  uploadedFiles.value.splice(index, 1)
 }
 
 /* ---- 工具函数 ---- */

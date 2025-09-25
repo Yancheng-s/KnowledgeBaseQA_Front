@@ -32,11 +32,3 @@ export const uploadFile = (data) => {
     data
   });
 };
-
-export const deleteToolCache = (data) => {
-  return request({
-    url: '/deleteToolCache',
-    method: 'delete',
-    data
-  });
-};
