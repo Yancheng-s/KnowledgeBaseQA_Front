@@ -154,7 +154,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { uploadImage, uploadFile, deleteToolCache, processAgent } from '@/api/agent'
+import { uploadImage, uploadFile, deleteToolCache } from '@/api/agent'
 
 const uploadedFiles = ref([]) // 存储已上传文件对象 { name, size, type, preview }
 
@@ -207,33 +207,10 @@ const imagePreview = ref('')     // 图片预览地址（base64）
 const uploading = ref(false)
 
 /* ---------- 方法 ---------- */
-const handleSubmit = async () => {
-  if (!props.agentId) {
-    console.error('agentId 不存在')
-    return
-  }
-
-  const messageContent = inputText.value.trim()
-  if (!messageContent) return
-
-  // 构造请求体
-  const payload = {
-    ...localAgentData.value,
-    message: messageContent,
-  }
-
-  try {
-    // 调用 API 发送请求并获取响应
-    const response = await processAgent(props.agentId, payload)
-
-    console.log('🚀 发送的消息:', payload)
-    console.log('✅ 返回的消息:', response.data) // 👈 打印返回结果
-
-    // 成功后更新本地消息列表
-    messages.value.push({ id: Date.now(), content: messageContent })
+const handleSubmit = () => {
+  if (inputText.value.trim()) {
+    messages.value.push({ id: Date.now(), content: inputText.value })
     inputText.value = ''
-  } catch (error) {
-    console.error('❌ 请求失败:', error.response?.data || error.message)
   }
 }
 

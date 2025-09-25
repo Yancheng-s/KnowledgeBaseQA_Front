@@ -220,20 +220,19 @@ const handleSubmit = async () => {
   const payload = {
     ...localAgentData.value,
     message: messageContent,
+    agent_id: props.agentId // 注意：这里可能需要根据后端要求调整字段名
   }
 
   try {
-    // 调用 API 发送请求并获取响应
-    const response = await processAgent(props.agentId, payload)
-
-    console.log('🚀 发送的消息:', payload)
-    console.log('✅ 返回的消息:', response.data) // 👈 打印返回结果
+    // 调用 API 发送请求
+    await processAgent(props.agentId, payload)
 
     // 成功后更新本地消息列表
     messages.value.push({ id: Date.now(), content: messageContent })
     inputText.value = ''
   } catch (error) {
-    console.error('❌ 请求失败:', error.response?.data || error.message)
+    console.error('发送失败:', error)
+    // 可以提示用户错误
   }
 }
 

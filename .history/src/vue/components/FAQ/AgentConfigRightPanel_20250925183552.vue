@@ -208,32 +208,45 @@ const uploading = ref(false)
 
 /* ---------- 方法 ---------- */
 const handleSubmit = async () => {
-  if (!props.agentId) {
-    console.error('agentId 不存在')
-    return
-  }
+  if (inputText.value.trim()) {
+    // 追加消息到 localAgentData
+    localAgentData.value.messages = localAgentData.value.messages || []
+    localAgentData.value.messages.push({
+      id: Date.now(),
+      content: inputText.value
+    })
 
-  const messageContent = inputText.value.trim()
-  if (!messageContent) return
-
-  // 构造请求体
-  const payload = {
-    ...localAgentData.value,
-    message: messageContent,
-  }
-
-  try {
-    // 调用 API 发送请求并获取响应
-    const response = await processAgent(props.agentId, payload)
-
-    console.log('🚀 发送的消息:', payload)
-    console.log('✅ 返回的消息:', response.data) // 👈 打印返回结果
-
-    // 成功后更新本地消息列表
-    messages.value.push({ id: Date.now(), content: messageContent })
+    // 清空输入框
     inputText.value = ''
-  } catch (error) {
-    console.error('❌ 请求失败:', error.response?.data || error.message)
+
+    // 构造请求数据
+    const requestData = {
+      agent_name: '智能体应用',
+      agent_state: '1',
+      llm_api: 'qwen-max',
+      llm_prompt: '默认模板',
+      llm_image: 'y',
+      llm_knowledge: '',
+      llm_file: 'y',
+      llm_internet: 'y',
+      llm_memory: 'n',
+      llm_maximum_length_of_reply: '1104',
+      llm_carry_number_of_rounds_of_context: '2',
+      llm_temperature_coefficient: '0.8',
+      message: inputText.value
+    }
+
+    try {
+      console.log('发送数据:', requestData)
+      const response = await processAgent(props.agentId, requestData)
+      console.log('返回数据:', response.data)
+      
+      // 处理响应数据
+      messages.value.push({ id: Date.now(), content: response.data.message || '响应成功' })
+    } catch (error) {
+      console.error('请求失败:', error)
+      messages.value.push({ id: Date.now(), content: '请求失败' })
+    }
   }
 }
 
