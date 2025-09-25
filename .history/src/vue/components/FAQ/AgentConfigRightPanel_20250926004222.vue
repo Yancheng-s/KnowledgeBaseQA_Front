@@ -60,8 +60,8 @@
     </div>
 
     <!-- 已上传文件展示区域 -->
-    <div v-if="uploadedFiles.length > 0" class="uploaded-files-container">
-      <div class="flex flex-wrap gap-2">
+    <div v-if="uploadedFiles.length > 0" class="uploaded-files-container mb-4">
+      <div class="flex flex-wrap gap-2 mb-2">
         <div v-for="(file, index) in uploadedFiles" :key="index" class="file-item">
           <!-- 图片文件直接展示 -->
           <div v-if="isImageFile(file.name)" class="relative group">
@@ -556,7 +556,7 @@ const isLatestAIMessage = (message) => {
   left: 0;
   right: 0;
   background: white;
-  padding: 0px 4px 0px 20px;
+  padding: 20px 4px 0px 20px;
   margin-bottom: 205px;
   flex-shrink: 0;
   position: relative;
@@ -594,10 +594,9 @@ const isLatestAIMessage = (message) => {
   left: 0;
   right: 0;
   background: white;
-  padding: 20px 4px 0px 20px;
+  padding: 5px 4px 0px 20px;
   margin-bottom: 205px;
   flex-shrink: 0;
-  position: relative;
 }
 
 .messages-list {
@@ -708,29 +707,10 @@ const isLatestAIMessage = (message) => {
 .uploaded-files-container {
   margin: 0 20px;
   flex-shrink: 0;
-  background: transparent;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.file-item {
-  display: inline-block;
-  margin-right: 8px;
-}
-
-/* 图片预览样式 */
-.file-item img {
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  width: 64px;
-  height: 64px;
-  object-fit: cover;
-  transition: transform 0.2s ease;
-}
-
-.file-item:hover img {
-  transform: scale(1.05);
+  background: transparent; /* 关键：透明背景 */
+  position: sticky; /* 或 fixed，根据需求 */
+  top: 0; /* 确保始终在顶部 */
+  z-index: 10; /* 提升层级 */
 }
 
 /* 隐藏 textarea 的滚动条 */

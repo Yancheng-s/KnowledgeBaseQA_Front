@@ -37,18 +37,16 @@
                 
                 <!-- 操作按钮 -->
                 <div class="action-buttons">
-                  <button class="action-btn" title="复制" @click="copyMessage(message)">
+                  <button class="action-btn" title="复制">
                     <i class="fas fa-copy"></i>
                   </button>
-                  <button 
-                    class="action-btn" 
-                    title="重新生成" 
-                    @click="retryMessage(message)"
-                    v-if="isLatestAIMessage(message)"
-                  >
+                  <button class="action-btn" title="问题">
+                    <i class="fas fa-question-circle"></i>
+                  </button>
+                  <button class="action-btn" title="刷新">
                     <i class="fas fa-redo"></i>
                   </button>
-                  <button class="action-btn" title="获取智能体ID" @click="showAgentId">
+                  <button class="action-btn" title="ID">
                     <i class="fas fa-id-card"></i>
                   </button>
                 </div>
@@ -60,8 +58,8 @@
     </div>
 
     <!-- 已上传文件展示区域 -->
-    <div v-if="uploadedFiles.length > 0" class="uploaded-files-container">
-      <div class="flex flex-wrap gap-2">
+    <div v-if="uploadedFiles.length > 0" class="uploaded-files-container mb-4">
+      <div class="flex flex-wrap gap-2 mb-2">
         <div v-for="(file, index) in uploadedFiles" :key="index" class="file-item">
           <!-- 图片文件直接展示 -->
           <div v-if="isImageFile(file.name)" class="relative group">
@@ -145,19 +143,19 @@
 
     <!-- 输入框部分 -->
     <div class="input-container">
-      <div class="bg-white rounded-lg border border-gray-200 p-2">
+      <div class="bg-white rounded-lg border border-gray-200 p-4">
         <div class="relative">
           <textarea
             v-model="inputText"
             :disabled="isModelNotSelected"
-            class="w-full bg-transparent border-none outline-none text-gray-700 text-sm resize-none"
+            class="w-full bg-transparent border-none outline-none text-gray-700 text-sm resize-none min-h-[80px]"
             :class="{ 'opacity-50 cursor-not-allowed': isModelNotSelected }"
             :placeholder="isModelNotSelected ? '请先选择模型' : '请输入内容...'"
             rows="3"
           ></textarea>
           
           <!-- 底部操作栏 -->
-          <div class="flex items-center justify-between pt-1">
+          <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
             <!-- 左侧按钮 -->
             <div class="flex items-center gap-2">
               <button
@@ -262,47 +260,6 @@ const imagePreview = ref('')     // 图片预览地址（base64）
 const uploading = ref(false)
 
 /* ---------- 方法 ---------- */
-const retryMessage = async (message) => {
-  if (!props.agentId) {
-    console.error('agentId 不存在')
-    return
-  }
-
-  // 使用原消息内容作为新请求体
-  const payload = {
-    ...localAgentData.value,
-    message: message.content,
-  }
-
-  try {
-    // 调用 API 重新处理
-    const response = await processAgent(props.agentId, payload)
-
-    console.log('✅ 重新生成请求成功:', response.data)
-
-    // 找到当前 AI 消息的索引
-    const aiIndex = messages.value.findIndex(m => m.id === message.id)
-    if (aiIndex !== -1) {
-      // 删除从当前 AI 消息开始的所有后续消息（包括它自己）
-      messages.value.splice(aiIndex, messages.value.length - aiIndex)
-    }
-
-    // 添加新的 AI 回复
-    if (response.data && response.data.result) {
-      messages.value.push({
-        id: Date.now() + 1,
-        content: response.data.result,
-        isAI: true,
-        stats: response.data.stats
-      })
-    } else {
-      console.warn('返回数据中缺少 result 字段')
-    }
-  } catch (error) {
-    console.error('❌ 重新生成失败:', error.response?.data || error.message)
-  }
-}
-
 const handleSubmit = async () => {
   if (!props.agentId) {
     console.error('agentId 不存在')
@@ -480,52 +437,6 @@ function getFileIconColor(filename) {
   if (['ppt', 'pptx'].includes(ext)) return '#f97316'
   return '#6b7280'
 }
-
-// 添加方法：点击 ID 按钮时触发
-const showAgentId = () => {
-  if (props.agentId) {
-    navigator.clipboard.writeText(props.agentId.toString())
-      .then(() => {
-        console.log('智能体 ID 已复制到剪贴板:', props.agentId)
-      })
-      .catch(err => {
-        console.error('复制失败:', err)
-        // 可选：如果复制失败，可以降级为 alert 提示
-        // alert(`复制失败: ${err}`)
-      })
-  } else {
-    console.warn('未获取到智能体 ID')
-  }
-}
-
-const copyMessage = (message) => {
-  if (!message.content) return
-
-  navigator.clipboard.writeText(message.content)
-    .then(() => {
-      console.log('已复制消息:', message.content)
-    })
-    .catch(err => {
-      console.error('复制失败:', err)
-      // 可选：降级为 alert 提示
-      // alert('复制失败，请手动选择文本复制')
-    })
-}
-
-const isLatestAIMessage = (message) => {
-  // 如果不是 AI 消息，直接返回 false
-  if (!message.isAI) return false
-
-  // 获取所有 AI 消息，并按 id 排序（id 是时间戳）
-  const aiMessages = messages.value.filter(m => m.isAI)
-  
-  // 找到最后一条 AI 消息
-  const latestAIMessage = aiMessages.length > 0 ? aiMessages[aiMessages.length - 1] : null
-
-  // 判断当前消息是否为最新的一条 AI 消息
-  return message.id === latestAIMessage?.id
-}
-
 </script>
 
 <style scoped>
@@ -534,32 +445,15 @@ const isLatestAIMessage = (message) => {
   min-height: 780px;
   display: flex;
   flex-direction: column;
-  height: 100vh;
 }
 
 .messages-container {
   flex: 1;
   overflow-y: auto;
   margin: 0 20px;
-  padding: 0 0 120px 15px; /* 为输入框留出空间 */
-  scroll-behavior: smooth;
-  max-height: calc(100vh - 200px);
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.messages-container::-webkit-scrollbar {
-  display: none; /* Chrome, Safari and Opera */
-}
-
-.input-container {
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: white;
-  padding: 0px 4px 0px 20px;
-  margin-bottom: 205px;
-  flex-shrink: 0;
   position: relative;
+  padding: 0 10px;
+  scroll-behavior: smooth;
 }
 
 .empty-state {
@@ -590,18 +484,13 @@ const isLatestAIMessage = (message) => {
 }
 
 .input-container {
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: white;
-  padding: 20px 4px 0px 20px;
-  margin-bottom: 205px;
-  flex-shrink: 0;
   position: relative;
+  margin: 0 20px 10px 20px; /* 增加下边距从20px到40px */
+  flex-shrink: 0;
 }
 
 .messages-list {
-  padding: 0px 0px 0px 0px;
+  padding: 20px 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -622,7 +511,7 @@ const isLatestAIMessage = (message) => {
 
 .user-message-content,
 .ai-message-content {
-  max-width: 100%;
+  max-width: 70%;
 }
 
 .message-bubble {
@@ -634,7 +523,8 @@ const isLatestAIMessage = (message) => {
 }
 
 .user-bubble {
-  background: #f5f5f5;
+  background: #f0f9ff;
+  border-color: #bae6fd;
 }
 
 .ai-bubble {
@@ -706,40 +596,7 @@ const isLatestAIMessage = (message) => {
 }
 
 .uploaded-files-container {
-  margin: 0 20px;
+  margin: 0 20px 0 20px;
   flex-shrink: 0;
-  background: transparent;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.file-item {
-  display: inline-block;
-  margin-right: 8px;
-}
-
-/* 图片预览样式 */
-.file-item img {
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  width: 64px;
-  height: 64px;
-  object-fit: cover;
-  transition: transform 0.2s ease;
-}
-
-.file-item:hover img {
-  transform: scale(1.05);
-}
-
-/* 隐藏 textarea 的滚动条 */
-textarea {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
-}
-
-textarea::-webkit-scrollbar {
-  display: none; /* Chrome, Safari and Opera */
 }
 </style>

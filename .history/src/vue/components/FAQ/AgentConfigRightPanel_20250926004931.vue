@@ -706,17 +706,18 @@ const isLatestAIMessage = (message) => {
 }
 
 .uploaded-files-container {
-  margin: 0 20px;
   flex-shrink: 0;
   background: transparent;
   position: sticky;
   top: 0;
   z-index: 10;
+  padding: 8px 0;
 }
 
 .file-item {
   display: inline-block;
   margin-right: 8px;
+  margin-bottom: 8px;
 }
 
 /* 图片预览样式 */

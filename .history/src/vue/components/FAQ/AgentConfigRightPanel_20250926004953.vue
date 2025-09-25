@@ -717,6 +717,7 @@ const isLatestAIMessage = (message) => {
 .file-item {
   display: inline-block;
   margin-right: 8px;
+  margin-bottom: 8px;
 }
 
 /* 图片预览样式 */

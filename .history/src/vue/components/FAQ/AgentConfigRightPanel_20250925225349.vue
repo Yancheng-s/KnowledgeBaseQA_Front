@@ -9,49 +9,43 @@
         </div>
       </div>
 
-      <!-- 消息列表 -->
+      <!-- 将 v-else 放在紧跟 v-if 的下一个兄弟节点上 -->
       <div v-else class="messages-list">
-        <div v-for="message in messages" :key="message.id" class="message-item" :class="{ 'user-message': !message.isAI, 'ai-message': message.isAI }">
+        <div v-for="message in messages" :key="message.id" class="message-wrapper" :class="{ 'user-wrapper': !message.isAI, 'ai-wrapper': message.isAI }">
           <!-- 用户消息 -->
-          <div v-if="!message.isAI" class="user-message-content">
-            <div class="message-bubble user-bubble">
-              <div class="message-text">{{ message.content }}</div>
-            </div>
+          <div v-if="!message.isAI" class="user-message-bubble">
+            <div class="message-content">{{ message.content }}</div>
           </div>
           
           <!-- AI消息 -->
-          <div v-else class="ai-message-content">
-            <div class="message-bubble ai-bubble">
-              <div class="message-text">{{ message.content }}</div>
+          <div v-else class="ai-message-bubble">
+            <div class="message-content">{{ message.content }}</div>
+            
+            <!-- AI消息统计信息和操作按钮 -->
+            <div class="ai-message-footer">
+              <!-- 统计信息 -->
+              <div v-if="message.stats" class="stats-info">
+                <span>字数: {{ message.stats.char_count }}</span>
+                <span class="separator">|</span>
+                <span>输入token: {{ message.stats.input_tokens }}</span>
+                <span class="separator">|</span>
+                <span>输出token: {{ message.stats.output_tokens }}</span>
+              </div>
               
-              <!-- AI消息统计信息和操作按钮 -->
-              <div class="message-footer">
-                <!-- 统计信息 -->
-                <div v-if="message.stats" class="stats-info">
-                  <span class="stat-item">字数: {{ message.stats.char_count }}</span>
-                  <span class="stat-separator">|</span>
-                  <span class="stat-item">输入token: {{ message.stats.input_tokens }}</span>
-                  <span class="stat-separator">|</span>
-                  <span class="stat-item">输出token: {{ message.stats.output_tokens }}</span>
-                </div>
-                
-                <!-- 操作按钮 -->
-                <div class="action-buttons">
-                  <button class="action-btn" title="复制" @click="copyMessage(message)">
-                    <i class="fas fa-copy"></i>
-                  </button>
-                  <button 
-                    class="action-btn" 
-                    title="重新生成" 
-                    @click="retryMessage(message)"
-                    v-if="isLatestAIMessage(message)"
-                  >
-                    <i class="fas fa-redo"></i>
-                  </button>
-                  <button class="action-btn" title="获取智能体ID" @click="showAgentId">
-                    <i class="fas fa-id-card"></i>
-                  </button>
-                </div>
+              <!-- 操作按钮 -->
+              <div class="action-buttons">
+                <button class="action-btn" title="复制">
+                  <i class="fas fa-copy"></i>
+                </button>
+                <button class="action-btn" title="问题">
+                  <i class="fas fa-question-circle"></i>
+                </button>
+                <button class="action-btn" title="刷新">
+                  <i class="fas fa-redo"></i>
+                </button>
+                <button class="action-btn" title="ID">
+                  <i class="fas fa-id-card"></i>
+                </button>
               </div>
             </div>
           </div>
@@ -60,8 +54,8 @@
     </div>
 
     <!-- 已上传文件展示区域 -->
-    <div v-if="uploadedFiles.length > 0" class="uploaded-files-container">
-      <div class="flex flex-wrap gap-2">
+    <div v-if="uploadedFiles.length > 0" class="uploaded-files-container mb-4">
+      <div class="flex flex-wrap gap-2 mb-2">
         <div v-for="(file, index) in uploadedFiles" :key="index" class="file-item">
           <!-- 图片文件直接展示 -->
           <div v-if="isImageFile(file.name)" class="relative group">
@@ -145,61 +139,49 @@
 
     <!-- 输入框部分 -->
     <div class="input-container">
-      <div class="bg-white rounded-lg border border-gray-200 p-2">
-        <div class="relative">
-          <textarea
-            v-model="inputText"
+      <div class="relative rounded-lg p-3 min-h-[120px] border border-gray-200">
+        <textarea
+          v-model="inputText"
+          :disabled="isModelNotSelected"
+          class="w-full bg-transparent border-none outline-none text-gray-700 text-sm mb-8 resize-none"
+          :class="{ 'opacity-50 cursor-not-allowed': isModelNotSelected }"
+          :placeholder="isModelNotSelected ? '请先选择模型' : '请输入内容...'"
+          rows="3"
+        ></textarea>
+        <div class="absolute bottom-3 left-3 flex items-center gap-3">
+          <button
+            class="!rounded-button text-gray-400 hover:text-gray-600"
+            :disabled="props.agentData.llm_image !== 'y'"
+            :class="{
+              'opacity-50 cursor-not-allowed': props.agentData.llm_image !== 'y',
+              'hover:text-gray-600': props.agentData.llm_image === 'y'
+            }"
+            @click="openImageUpload"
+          >
+            <i class="fas fa-image text-sm"></i>
+          </button>
+          <button
+            class="!rounded-button text-gray-400 hover:text-gray-600"
+            :disabled="props.agentData.llm_file !== 'y'"
+            :class="{
+              'opacity-50 cursor-not-allowed': props.agentData.llm_file !== 'y',
+              'hover:text-gray-600': props.agentData.llm_file === 'y'
+            }"
+            @click="openFileUpload"
+          >
+            <i class="fas fa-file"></i>
+          </button>
+        </div>
+        <div class="absolute bottom-3 right-3 flex items-center gap-3">
+          <span class="text-xs text-gray-400">{{ inputLength }}/129024</span>
+          <button
+            class="!rounded-button bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5"
             :disabled="isModelNotSelected"
-            class="w-full bg-transparent border-none outline-none text-gray-700 text-sm resize-none"
             :class="{ 'opacity-50 cursor-not-allowed': isModelNotSelected }"
-            :placeholder="isModelNotSelected ? '请先选择模型' : '请输入内容...'"
-            rows="3"
-          ></textarea>
-          
-          <!-- 底部操作栏 -->
-          <div class="flex items-center justify-between pt-1">
-            <!-- 左侧按钮 -->
-            <div class="flex items-center gap-2">
-              <button
-                class="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-                :disabled="props.agentData.llm_image !== 'y'"
-                :class="{
-                  'opacity-50 cursor-not-allowed': props.agentData.llm_image !== 'y',
-                  'hover:text-blue-600 hover:bg-blue-50': props.agentData.llm_image === 'y'
-                }"
-                @click="openImageUpload"
-                title="上传图片"
-              >
-                <i class="fas fa-image text-sm"></i>
-              </button>
-              <button
-                class="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-                :disabled="props.agentData.llm_file !== 'y'"
-                :class="{
-                  'opacity-50 cursor-not-allowed': props.agentData.llm_file !== 'y',
-                  'hover:text-blue-600 hover:bg-blue-50': props.agentData.llm_file === 'y'
-                }"
-                @click="openFileUpload"
-                title="上传文件"
-              >
-                <i class="fas fa-file text-sm"></i>
-              </button>
-            </div>
-            
-            <!-- 右侧信息 -->
-            <div class="flex items-center gap-3">
-              <span class="text-xs text-gray-400">{{ inputLength }}/129024</span>
-              <button
-                class="flex items-center justify-center w-8 h-8 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
-                :disabled="isModelNotSelected"
-                :class="{ 'opacity-50 cursor-not-allowed': isModelNotSelected }"
-                @click="handleSubmit"
-                title="发送消息"
-              >
-                <i class="fas fa-arrow-up text-sm"></i>
-              </button>
-            </div>
-          </div>
+            @click="handleSubmit"
+          >
+            <i class="fas fa-arrow-up text-sm"></i>
+          </button>
         </div>
       </div>
     </div>
@@ -262,47 +244,6 @@ const imagePreview = ref('')     // 图片预览地址（base64）
 const uploading = ref(false)
 
 /* ---------- 方法 ---------- */
-const retryMessage = async (message) => {
-  if (!props.agentId) {
-    console.error('agentId 不存在')
-    return
-  }
-
-  // 使用原消息内容作为新请求体
-  const payload = {
-    ...localAgentData.value,
-    message: message.content,
-  }
-
-  try {
-    // 调用 API 重新处理
-    const response = await processAgent(props.agentId, payload)
-
-    console.log('✅ 重新生成请求成功:', response.data)
-
-    // 找到当前 AI 消息的索引
-    const aiIndex = messages.value.findIndex(m => m.id === message.id)
-    if (aiIndex !== -1) {
-      // 删除从当前 AI 消息开始的所有后续消息（包括它自己）
-      messages.value.splice(aiIndex, messages.value.length - aiIndex)
-    }
-
-    // 添加新的 AI 回复
-    if (response.data && response.data.result) {
-      messages.value.push({
-        id: Date.now() + 1,
-        content: response.data.result,
-        isAI: true,
-        stats: response.data.stats
-      })
-    } else {
-      console.warn('返回数据中缺少 result 字段')
-    }
-  } catch (error) {
-    console.error('❌ 重新生成失败:', error.response?.data || error.message)
-  }
-}
-
 const handleSubmit = async () => {
   if (!props.agentId) {
     console.error('agentId 不存在')
@@ -480,52 +421,6 @@ function getFileIconColor(filename) {
   if (['ppt', 'pptx'].includes(ext)) return '#f97316'
   return '#6b7280'
 }
-
-// 添加方法：点击 ID 按钮时触发
-const showAgentId = () => {
-  if (props.agentId) {
-    navigator.clipboard.writeText(props.agentId.toString())
-      .then(() => {
-        console.log('智能体 ID 已复制到剪贴板:', props.agentId)
-      })
-      .catch(err => {
-        console.error('复制失败:', err)
-        // 可选：如果复制失败，可以降级为 alert 提示
-        // alert(`复制失败: ${err}`)
-      })
-  } else {
-    console.warn('未获取到智能体 ID')
-  }
-}
-
-const copyMessage = (message) => {
-  if (!message.content) return
-
-  navigator.clipboard.writeText(message.content)
-    .then(() => {
-      console.log('已复制消息:', message.content)
-    })
-    .catch(err => {
-      console.error('复制失败:', err)
-      // 可选：降级为 alert 提示
-      // alert('复制失败，请手动选择文本复制')
-    })
-}
-
-const isLatestAIMessage = (message) => {
-  // 如果不是 AI 消息，直接返回 false
-  if (!message.isAI) return false
-
-  // 获取所有 AI 消息，并按 id 排序（id 是时间戳）
-  const aiMessages = messages.value.filter(m => m.isAI)
-  
-  // 找到最后一条 AI 消息
-  const latestAIMessage = aiMessages.length > 0 ? aiMessages[aiMessages.length - 1] : null
-
-  // 判断当前消息是否为最新的一条 AI 消息
-  return message.id === latestAIMessage?.id
-}
-
 </script>
 
 <style scoped>
@@ -534,32 +429,15 @@ const isLatestAIMessage = (message) => {
   min-height: 780px;
   display: flex;
   flex-direction: column;
-  height: 100vh;
 }
 
 .messages-container {
   flex: 1;
   overflow-y: auto;
   margin: 0 20px;
-  padding: 0 0 120px 15px; /* 为输入框留出空间 */
-  scroll-behavior: smooth;
-  max-height: calc(100vh - 200px);
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.messages-container::-webkit-scrollbar {
-  display: none; /* Chrome, Safari and Opera */
-}
-
-.input-container {
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: white;
-  padding: 0px 4px 0px 20px;
-  margin-bottom: 205px;
-  flex-shrink: 0;
   position: relative;
+  padding: 0 10px;
+  scroll-behavior: smooth;
 }
 
 .empty-state {
@@ -590,73 +468,76 @@ const isLatestAIMessage = (message) => {
 }
 
 .input-container {
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: white;
-  padding: 20px 4px 0px 20px;
-  margin-bottom: 205px;
-  flex-shrink: 0;
   position: relative;
+  margin: 0 70px 20px 80px;
+  flex-shrink: 0;
+}
+
+input::placeholder {
+  color: #9ca3af;
 }
 
 .messages-list {
-  padding: 0px 0px 0px 0px;
+  padding: 20px 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.message-item {
+.message-wrapper {
   display: flex;
   width: 100%;
 }
 
-.user-message {
+.user-wrapper {
   justify-content: flex-end;
 }
 
-.ai-message {
+.ai-wrapper {
   justify-content: flex-start;
 }
 
-.user-message-content,
-.ai-message-content {
-  max-width: 100%;
-}
-
-.message-bubble {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
+/* 用户消息样式 */
+.user-message-bubble {
+  max-width: 70%;
+  background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 18px 18px 4px 18px;
   padding: 12px 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
 }
 
-.user-bubble {
-  background: #f5f5f5;
-}
-
-.ai-bubble {
-  background: white;
-  border-color: #e5e7eb;
-}
-
-.message-text {
-  color: #374151;
+.user-message-bubble .message-content {
+  color: #1e40af;
   font-size: 14px;
   line-height: 1.5;
   word-wrap: break-word;
 }
 
-.message-footer {
+/* AI消息样式 */
+.ai-message-bubble {
+  max-width: 80%;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px 18px 18px 4px;
+  padding: 12px 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.ai-message-bubble .message-content {
+  color: #334155;
+  font-size: 14px;
+  line-height: 1.5;
+  word-wrap: break-word;
+  margin-bottom: 8px;
+}
+
+/* AI消息底部信息 */
+.ai-message-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid #f3f4f6;
   flex-wrap: wrap;
 }
 
@@ -665,17 +546,13 @@ const isLatestAIMessage = (message) => {
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: #6b7280;
+  color: #64748b;
   flex: 1;
   min-width: 0;
 }
 
-.stat-item {
-  white-space: nowrap;
-}
-
-.stat-separator {
-  color: #d1d5db;
+.separator {
+  color: #cbd5e1;
 }
 
 .action-buttons {
@@ -690,7 +567,7 @@ const isLatestAIMessage = (message) => {
   height: 24px;
   border: none;
   background: transparent;
-  color: #9ca3af;
+  color: #94a3b8;
   border-radius: 4px;
   display: flex;
   align-items: center;
@@ -701,45 +578,42 @@ const isLatestAIMessage = (message) => {
 }
 
 .action-btn:hover {
-  background: #f3f4f6;
-  color: #6b7280;
+  background: #f1f5f9;
+  color: #475569;
 }
 
 .uploaded-files-container {
-  margin: 0 20px;
+  margin: 0 70px 0 80px;
   flex-shrink: 0;
-  background: transparent;
-  position: sticky;
-  top: 0;
-  z-index: 10;
 }
 
-.file-item {
-  display: inline-block;
-  margin-right: 8px;
-}
-
-/* 图片预览样式 */
-.file-item img {
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  width: 64px;
-  height: 64px;
-  object-fit: cover;
-  transition: transform 0.2s ease;
-}
-
-.file-item:hover img {
-  transform: scale(1.05);
-}
-
-/* 隐藏 textarea 的滚动条 */
-textarea {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
-}
-
-textarea::-webkit-scrollbar {
-  display: none; /* Chrome, Safari and Opera */
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .messages-container {
+    margin: 0 10px;
+  }
+  
+  .input-container {
+    margin: 0 20px 20px 30px;
+  }
+  
+  .uploaded-files-container {
+    margin: 0 20px 0 30px;
+  }
+  
+  .user-message-bubble,
+  .ai-message-bubble {
+    max-width: 85%;
+  }
+  
+  .ai-message-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .action-buttons {
+    align-self: flex-end;
+  }
 }
 </style>

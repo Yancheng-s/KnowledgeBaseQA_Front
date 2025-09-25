@@ -60,8 +60,8 @@
     </div>
 
     <!-- 已上传文件展示区域 -->
-    <div v-if="uploadedFiles.length > 0" class="uploaded-files-container">
-      <div class="flex flex-wrap gap-2">
+    <div v-if="uploadedFiles.length > 0" class="uploaded-files-container mb-4">
+      <div class="flex flex-wrap gap-2 mb-2">
         <div v-for="(file, index) in uploadedFiles" :key="index" class="file-item">
           <!-- 图片文件直接展示 -->
           <div v-if="isImageFile(file.name)" class="relative group">
@@ -556,7 +556,7 @@ const isLatestAIMessage = (message) => {
   left: 0;
   right: 0;
   background: white;
-  padding: 0px 4px 0px 20px;
+  padding: 20px 4px 0px 20px;
   margin-bottom: 205px;
   flex-shrink: 0;
   position: relative;
@@ -594,10 +594,9 @@ const isLatestAIMessage = (message) => {
   left: 0;
   right: 0;
   background: white;
-  padding: 20px 4px 0px 20px;
+  padding: 5px 4px 0px 20px;
   margin-bottom: 205px;
   flex-shrink: 0;
-  position: relative;
 }
 
 .messages-list {
@@ -712,11 +711,13 @@ const isLatestAIMessage = (message) => {
   position: sticky;
   top: 0;
   z-index: 10;
+  padding: 8px 0;
 }
 
 .file-item {
   display: inline-block;
   margin-right: 8px;
+  margin-bottom: 8px;
 }
 
 /* 图片预览样式 */

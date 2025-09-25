@@ -556,7 +556,7 @@ const isLatestAIMessage = (message) => {
   left: 0;
   right: 0;
   background: white;
-  padding: 0px 4px 0px 20px;
+  padding: -10px 4px 0px 20px;
   margin-bottom: 205px;
   flex-shrink: 0;
   position: relative;
@@ -712,11 +712,13 @@ const isLatestAIMessage = (message) => {
   position: sticky;
   top: 0;
   z-index: 10;
+  padding: 8px 0;
 }
 
 .file-item {
   display: inline-block;
   margin-right: 8px;
+  margin-bottom: 8px;
 }
 
 /* 图片预览样式 */
