@@ -159,7 +159,7 @@ async function createAgent() {
       agent_name: "智能体应用",
       agent_state: "1",
       agent_id: agentId, // 使用处理后的数字类型 ID
-      llm_api: "",
+      llm_api: "暂未选择模型",
       llm_prompt: "",
       llm_image: "n",
       llm_knowledge: "",

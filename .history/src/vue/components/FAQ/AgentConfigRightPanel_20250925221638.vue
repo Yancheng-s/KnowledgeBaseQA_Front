@@ -15,14 +15,6 @@
           <div :class="{ 'user-message': !message.isAI, 'ai-message': message.isAI }">
             {{ message.content }}
           </div>
-
-          <div v-if="message.isAI && message.stats" class="stats-info text-xs text-gray-500 mt-1">
-            <span>字符数: {{ message.stats.char_count }}</span>
-            <span class="mx-2">|</span>
-            <span>输入 token: {{ message.stats.input_tokens }}</span>
-            <span class="mx-2">|</span>
-            <span>输出 token: {{ message.stats.output_tokens }}</span>
-          </div>
         </div>
       </div>
     </div>
@@ -244,15 +236,14 @@ const handleSubmit = async () => {
     messages.value.push({ id: Date.now(), content: messageContent })
 
     // ✅ 添加 AI 回复消息
-    if (response.data && response.data.result) {
+    if (response.data && response.data.message) {
       messages.value.push({
         id: Date.now() + 1,
-        content: response.data.result,
-        isAI: true, // 可选：标记为 AI 消息
-        stats: response.data.stats
+        content: response.data.message,
+        isAI: true // 可选：标记为 AI 消息
       })
     } else {
-      console.warn('返回数据中缺少 result 字段')
+      console.warn('返回数据中缺少 message 字段')
     }
 
     inputText.value = ''
@@ -454,21 +445,5 @@ input::placeholder {
 .uploaded-files-container {
   margin: 0 70px 0 80px;
   flex-shrink: 0;
-}
-
-.user-message {
-  background-color: #e0f7ff;
-  color: #0066cc;
-  padding: 8px 12px;
-  border-radius: 4px;
-  margin-bottom: 8px;
-}
-
-.ai-message {
-  background-color: #f8f9fa;
-  color: #333;
-  padding: 8px 12px;
-  border-radius: 4px;
-  margin-bottom: 8px;
 }
 </style>
