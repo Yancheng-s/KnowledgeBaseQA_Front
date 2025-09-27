@@ -1,9 +1,24 @@
 <template>
-  <div v-if="isVisible" class="floating-chat-overlay" @click="closeFloatingChat">
-    <div class="floating-chat-modal" @click.stop>
+  <div v-if="isVisible" class="floating-chat-container" :class="{ 'fullscreen': isFullscreen, 'pinned': isPinned }" :style="{ left: position.x + 'px', top: position.y + 'px' }">
+    <div class="floating-chat-window">
       <!-- 头部 -->
-      <div class="floating-chat-header">
-        <h3 class="floating-chat-title">AI 对话助手</h3>
+      <div class="floating-chat-header" @mousedown="startDrag">
+        <button class="pin-btn" :class="{ 'pinned': isPinned }" @click="bringToFront" :title="isPinned ? '取消置顶' : '置顶窗口'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- 未选中时：斜着的图钉 -->
+            <g v-if="!isPinned" class="pin-diagonal">
+              <path d="M12 2l-1.5 1.5L12 5l1.5-1.5L12 2z"/>
+              <path d="M12 5v13"/>
+              <circle cx="12" cy="20" r="2"/>
+            </g>
+            <!-- 选中时：竖着的图钉 -->
+            <g v-else class="pin-vertical">
+              <path d="M12 2l-1.5 1.5L12 5l1.5-1.5L12 2z"/>
+              <path d="M12 5v13"/>
+              <circle cx="12" cy="20" r="2"/>
+            </g>
+          </svg>
+        </button>
         <div class="floating-chat-actions">
           <button class="action-btn" @click="toggleFullscreen" title="全屏">
             <i class="fas fa-expand"></i>
@@ -11,20 +26,6 @@
           <button class="action-btn" @click="closeFloatingChat" title="关闭">
             <i class="fas fa-times"></i>
           </button>
-        </div>
-      </div>
-
-      <!-- 搜索框 -->
-      <div class="floating-chat-search">
-        <div class="search-input-container">
-          <i class="fas fa-search search-icon"></i>
-          <input 
-            v-model="searchQuery" 
-            type="text" 
-            placeholder="输入您的问题..." 
-            class="search-input"
-            @keyup.enter="handleSearch"
-          />
         </div>
       </div>
 
@@ -116,14 +117,19 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import { marked } from 'marked'
+import { processAgent } from '@/api/agent'
 
 // Props
 const props = defineProps({
   isVisible: {
     type: Boolean,
     default: false
+  },
+  agentId: {
+    type: [String, Number],
+    default: null
   }
 })
 
@@ -135,6 +141,15 @@ const inputText = ref('')
 const messages = ref([])
 const searchQuery = ref('')
 const isFullscreen = ref(false)
+const isPinned = ref(false)
+
+// 置顶功能相关
+let forceTopInterval = null
+
+// 拖拽相关状态
+const position = ref({ x: 100, y: 100 })
+const isDragging = ref(false)
+const dragStart = ref({ x: 0, y: 0 })
 
 // 热门问题
 const hotSearches = ref([
@@ -159,6 +174,93 @@ const closeFloatingChat = () => {
 const toggleFullscreen = () => {
   isFullscreen.value = !isFullscreen.value
   emit('toggle-fullscreen', isFullscreen.value)
+}
+
+const bringToFront = () => {
+  isPinned.value = !isPinned.value
+  
+  if (isPinned.value) {
+    enableForceTop()
+  } else {
+    disableForceTop()
+  }
+  
+  // 短暂闪烁效果提示用户
+  const container = document.querySelector('.floating-chat-container')
+  if (container) {
+    container.style.transform = 'scale(1.02)'
+    container.style.transition = 'transform 0.15s ease'
+    setTimeout(() => {
+      container.style.transform = 'scale(1)'
+      setTimeout(() => {
+        container.style.transition = ''
+      }, 150)
+    }, 150)
+  }
+}
+
+// 置顶功能实现
+const enableForceTop = () => {
+  // 清除之前的定时器
+  if (forceTopInterval) {
+    clearInterval(forceTopInterval)
+  }
+  
+  // 立即设置置顶
+  setForceTop()
+  
+  // 每100ms检查一次，确保置顶
+  forceTopInterval = setInterval(() => {
+    setForceTop()
+  }, 100)
+  
+  // 监听页面可见性变化
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+  window.addEventListener('focus', handleWindowFocus)
+}
+
+const disableForceTop = () => {
+  // 清除定时器
+  if (forceTopInterval) {
+    clearInterval(forceTopInterval)
+    forceTopInterval = null
+  }
+  
+  // 移除事件监听
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
+  window.removeEventListener('focus', handleWindowFocus)
+  
+  // 恢复默认z-index
+  const container = document.querySelector('.floating-chat-container')
+  if (container) {
+    container.style.zIndex = '9999'
+  }
+}
+
+const setForceTop = () => {
+  const container = document.querySelector('.floating-chat-container')
+  if (container && isPinned.value) {
+    // 使用最大z-index值
+    container.style.zIndex = '2147483647'
+    container.style.position = 'fixed'
+    
+    // 确保窗口可见
+    if (container.style.display === 'none') {
+      container.style.display = 'block'
+    }
+  }
+}
+
+const handleVisibilityChange = () => {
+  if (!document.hidden && isPinned.value) {
+    setForceTop()
+  }
+}
+
+const handleWindowFocus = () => {
+  if (isPinned.value) {
+    setForceTop()
+  }
 }
 
 const handleSearch = () => {
@@ -198,20 +300,64 @@ const handleSubmit = async () => {
     isLoading: true
   })
 
-  // 模拟AI回复（这里可以替换为实际的API调用）
-  setTimeout(() => {
-    const aiResponse = generateAIResponse(messageContent)
+  // 检查是否有agentId
+  if (!props.agentId) {
+    // 如果没有agentId，使用模拟回复
+    setTimeout(() => {
+      const aiResponse = generateAIResponse(messageContent)
+      
+      // 找到加载消息并替换为实际回复
+      const loadingIndex = messages.value.findIndex(m => m.id === loadingMessageId)
+      if (loadingIndex !== -1) {
+        messages.value[loadingIndex] = {
+          id: loadingMessageId,
+          content: aiResponse,
+          isAI: true
+        }
+      }
+    }, 1500)
+    return
+  }
+
+  // 使用真实的API调用
+  try {
+    const payload = {
+      message: messageContent,
+    }
+
+    const response = await processAgent(props.agentId, payload)
     
     // 找到加载消息并替换为实际回复
     const loadingIndex = messages.value.findIndex(m => m.id === loadingMessageId)
     if (loadingIndex !== -1) {
+      if (response.data && response.data.result) {
+        messages.value[loadingIndex] = {
+          id: loadingMessageId,
+          content: response.data.result,
+          isAI: true,
+          stats: response.data.stats
+        }
+      } else {
+        messages.value[loadingIndex] = {
+          id: loadingMessageId,
+          content: '抱歉，AI 回复出现错误',
+          isAI: true
+        }
+      }
+    }
+  } catch (error) {
+    console.error('❌ 请求失败:', error.response?.data || error.message)
+    
+    // 找到加载消息并替换为错误信息
+    const loadingIndex = messages.value.findIndex(m => m.id === loadingMessageId)
+    if (loadingIndex !== -1) {
       messages.value[loadingIndex] = {
         id: loadingMessageId,
-        content: aiResponse,
+        content: '抱歉，请求失败，请稍后重试',
         isAI: true
       }
     }
-  }, 1500)
+  }
 }
 
 const handleNewLine = () => {
@@ -236,68 +382,163 @@ const renderMarkdown = (content) => {
   return marked(content)
 }
 
+// 拖拽相关方法
+const startDrag = (e) => {
+  // 只允许通过头部拖拽，排除按钮区域
+  if (e.target.closest('.floating-chat-actions') || e.target.closest('.action-btn')) return
+  
+  isDragging.value = true
+  dragStart.value = {
+    x: e.clientX - position.value.x,
+    y: e.clientY - position.value.y
+  }
+  
+  document.addEventListener('mousemove', onDrag)
+  document.addEventListener('mouseup', stopDrag)
+  e.preventDefault()
+}
+
+const onDrag = (e) => {
+  if (!isDragging.value) return
+  
+  position.value = {
+    x: e.clientX - dragStart.value.x,
+    y: e.clientY - dragStart.value.y
+  }
+}
+
+const stopDrag = () => {
+  isDragging.value = false
+  document.removeEventListener('mousemove', onDrag)
+  document.removeEventListener('mouseup', stopDrag)
+}
+
 // 监听全屏状态
 watch(isFullscreen, (newVal) => {
-  const modal = document.querySelector('.floating-chat-modal')
-  if (modal) {
+  const window = document.querySelector('.floating-chat-window')
+  if (window) {
     if (newVal) {
-      modal.classList.add('fullscreen')
+      window.classList.add('fullscreen')
     } else {
-      modal.classList.remove('fullscreen')
+      window.classList.remove('fullscreen')
     }
   }
+})
+
+// 组件销毁时清理
+onUnmounted(() => {
+  // 清理置顶功能
+  disableForceTop()
 })
 </script>
 
 <style scoped>
-.floating-chat-overlay {
+.floating-chat-container {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
   z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
+  user-select: none;
 }
 
-.floating-chat-modal {
+.floating-chat-container.fullscreen {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 10001 !important;
+}
+
+.floating-chat-container.pinned {
+  z-index: 99999 !important;
+  position: fixed !important;
+}
+
+.floating-chat-window {
   background: white;
   border-radius: 12px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  width: 100%;
-  max-width: 600px;
-  max-height: 80vh;
+  width: 370px;
+  height: 600px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   transition: all 0.3s ease;
+  border: 1px solid #e5e7eb;
 }
 
-.floating-chat-modal.fullscreen {
-  max-width: 95vw;
-  max-height: 95vh;
-  width: 95vw;
-  height: 95vh;
+.floating-chat-window.fullscreen {
+  width: 95vw !important;
+  height: 95vh !important;
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 10001 !important;
+  border-radius: 8px;
+  margin: 0 !important;
 }
 
 .floating-chat-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 24px 16px;
-  border-bottom: 1px solid #f3f4f6;
+  padding: 12px 16px;
+  cursor: move;
+  user-select: none;
 }
 
-.floating-chat-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0;
+.pin-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pin-btn:hover {
+  background: #f3f4f6;
+  color: #374151;
+  transform: scale(1.1);
+}
+
+.pin-btn:active {
+  transform: scale(0.95);
+}
+
+.pin-btn.pinned {
+  color: #3b82f6;
+  background: #eff6ff;
+}
+
+.pin-btn.pinned:hover {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.pin-diagonal {
+  transform: rotate(-20deg);
+  transform-origin: center;
+  transition: transform 0.3s ease;
+}
+
+.pin-vertical {
+  transform: rotate(0deg);
+  transform-origin: center;
+  transition: transform 0.3s ease;
+}
+
+.pin-btn svg {
+  transition: all 0.3s ease;
+}
+
+.pin-btn:hover svg {
+  transform: scale(1.1);
 }
 
 .floating-chat-actions {
@@ -361,6 +602,13 @@ watch(isFullscreen, (newVal) => {
   flex: 1;
   overflow-y: auto;
   padding: 20px 24px;
+  /* 隐藏滚动条 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.floating-chat-content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .floating-chat-empty {
@@ -536,37 +784,52 @@ watch(isFullscreen, (newVal) => {
 
 .floating-chat-input {
   padding: 16px 24px;
-  border-top: 1px solid #f3f4f6;
-  background: #fafafa;
 }
 
 .input-container {
   display: flex;
   gap: 12px;
-  align-items: flex-end;
+  align-items: center;
 }
 
 .floating-textarea {
   flex: 1;
-  padding: 12px;
+  padding: 0 12px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
   font-size: 14px;
   resize: none;
   outline: none;
-  transition: border-color 0.2s ease;
+  transition: all 0.2s ease;
   font-family: inherit;
+  height: 40px;
+  line-height: 40px;
+  box-sizing: border-box;
+  background: white;
+  color: #374151;
+  /* 隐藏滚动条 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.floating-textarea::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .floating-textarea:focus {
-  border-color: #8b5cf6;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background: white;
+}
+
+.floating-textarea::placeholder {
+  color: #9ca3af;
 }
 
 .floating-send-btn {
   width: 40px;
   height: 40px;
-  background: #8b5cf6;
+  background: #1d4ed8;
   color: white;
   border: none;
   border-radius: 8px;
@@ -579,7 +842,7 @@ watch(isFullscreen, (newVal) => {
 }
 
 .floating-send-btn:hover:not(:disabled) {
-  background: #7c3aed;
+  background: #1d4ed8;
 }
 
 .floating-send-btn:disabled {
@@ -640,6 +903,13 @@ watch(isFullscreen, (newVal) => {
   border-radius: 6px;
   overflow-x: auto;
   margin: 0.5em 0;
+  /* 隐藏滚动条 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.floating-message-text :deep(pre)::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .floating-message-text :deep(pre code) {

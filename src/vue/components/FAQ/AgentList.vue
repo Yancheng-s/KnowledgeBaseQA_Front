@@ -41,7 +41,7 @@
                 <span class="text-sm text-gray-500">{{ app.type }}</span>
                 <div class="flex items-center space-x-2">
                 <button class="text-blue-600 px-4 py-1.5 border border-blue-600 !rounded-button whitespace-nowrap">配置</button>
-                <button class="bg-blue-600 text-white px-4 py-1.5 !rounded-button whitespace-nowrap">使用</button>
+                <button class="bg-blue-600 text-white px-4 py-1.5 !rounded-button whitespace-nowrap" @click="openFloatingChat(app.id)">使用</button>
 
               <!-- 悬停菜单触发按钮 -->
               <div class="relative inline-block">
@@ -95,6 +95,14 @@
             </div>
         </template>
     </div>
+
+    <!-- 悬浮窗对话 -->
+    <FloatingChat 
+      :is-visible="showFloatingChat" 
+      :agent-id="selectedAgentId"
+      @close="closeFloatingChat"
+      @toggle-fullscreen="handleToggleFullscreen"
+    />
 </template>
 
 <script lang="ts" setup>
@@ -102,6 +110,7 @@ import { ref, onMounted } from 'vue';
 import { addAgent, selectAllAgents } from '@/api/agent';
 import agentIcon from '@/img/agent/智能体.png';
 import { generateUniqueIntId } from '@/utils/generateId';
+import FloatingChat from './FloatingChat.vue';
 
 // 定义事件发射
 const emit = defineEmits(['create-agent']);
@@ -173,12 +182,12 @@ async function createAgent() {
 
     const response = await addAgent(agentData);
     
-    if (response.success) {
+    if (response.data && response.data.success) {
       selectAllKBS();
       console.log('智能体创建成功:', response.data);
       emit('create-agent', agentId);
     } else {
-      console.error('智能体创建失败:', response.message);
+      console.error('智能体创建失败:', response.data?.message || '未知错误');
       emit('create-agent', agentId);
     }
   } catch (error) {
@@ -190,6 +199,10 @@ async function createAgent() {
 const showMenu = ref<Record<string, boolean>>({}); // 菜单是否显示
 const isHoveringMenu = ref<Record<string, boolean>>({}); // 是否正在悬停菜单
 const hideTimeouts = ref<Record<string, number>>({});
+
+// 悬浮窗相关状态
+const showFloatingChat = ref(false);
+const selectedAgentId = ref<string | null>(null);
 
 const showMenuForApp = (id: string) => {
   // 清除可能存在的隐藏定时器
@@ -248,6 +261,22 @@ const handleLeaveButton = (id: string) => {
       toggleMenu(id);
     }
   }, 50);
+};
+
+// 悬浮窗相关方法
+const openFloatingChat = (agentId: string) => {
+  selectedAgentId.value = agentId;
+  showFloatingChat.value = true;
+};
+
+const closeFloatingChat = () => {
+  showFloatingChat.value = false;
+  selectedAgentId.value = null;
+};
+
+const handleToggleFullscreen = (isFullscreen: boolean) => {
+  console.log('全屏状态:', isFullscreen);
+  // 这里可以添加全屏相关的逻辑
 };
 
 onMounted(() => {
