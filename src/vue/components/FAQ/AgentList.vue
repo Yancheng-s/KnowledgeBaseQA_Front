@@ -172,17 +172,18 @@ async function createAgent() {
     };
 
     const response = await addAgent(agentData);
-    
-    if (response.success) {
+
+    if (response.data && response.data.success) {
       selectAllKBS();
       console.log('智能体创建成功:', response.data);
       emit('create-agent', agentId);
     } else {
-      console.error('智能体创建失败:', response.message);
-      emit('create-agent', agentId);
+      console.error('智能体创建失败:', response.data?.message || response.data || response);
+      emit('create-agent', null);
     }
   } catch (error) {
     console.error('创建智能体时发生错误:', error);
+    emit('create-agent', null);
     emit('create-agent', null);
   }
 }

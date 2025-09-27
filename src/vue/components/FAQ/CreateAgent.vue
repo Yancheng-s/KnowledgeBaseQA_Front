@@ -35,9 +35,6 @@
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <button class="p-2 text-gray-500 hover:bg-gray-50 rounded-button">
-            <i class="fas fa-expand"></i>
-          </button>
           <button class="flex items-center px-3 py-1 border border-gray-200 rounded-button hover:bg-gray-50 whitespace-nowrap">
             <i class="fas fa-code-branch mr-1.5"></i>
             <span>版本管理</span>
