@@ -15,28 +15,17 @@
           <!-- 用户消息 -->
           <div v-if="!message.isAI" class="user-message-content">
             <div class="message-bubble user-bubble">
-              <div class="message-text" v-html="renderMarkdown(message.content)"></div>
+              <div class="message-text">{{ message.content }}</div>
             </div>
           </div>
           
           <!-- AI消息 -->
           <div v-else class="ai-message-content">
             <div class="message-bubble ai-bubble">
-              <!-- 加载动画 -->
-              <div v-if="message.isLoading" class="loading-container">
-                <div class="loading-dots">
-                  <div class="dot"></div>
-                  <div class="dot"></div>
-                  <div class="dot"></div>
-                </div>
-                <span class="loading-text">AI 正在思考中...</span>
-              </div>
-              
-              <!-- 正常消息内容 -->
-              <div v-else class="message-text" v-html="renderMarkdown(message.content)"></div>
+              <div class="message-text">{{ message.content }}</div>
               
               <!-- AI消息统计信息和操作按钮 -->
-              <div v-if="!message.isLoading" class="message-footer">
+              <div class="message-footer">
                 <!-- 统计信息 -->
                 <div v-if="message.stats" class="stats-info">
                   <span class="stat-item">字数: {{ message.stats.char_count }}</span>
@@ -70,14 +59,14 @@
       </div>
     </div>
 
-    <!-- 已上传文件展示区域 - 悬浮显示 -->
-    <div v-if="uploadedFiles.length > 0" class="uploaded-files-floating" :class="{ 'file-hovered': isFileHovered }" @mouseenter="handleFileMouseEnter" @mouseleave="handleFileMouseLeave">
+    <!-- 已上传文件展示区域 -->
+    <div v-if="uploadedFiles.length > 0" class="uploaded-files-container">
       <div class="flex flex-wrap gap-2">
         <div v-for="(file, index) in uploadedFiles" :key="index" class="file-item">
           <!-- 图片文件直接展示 -->
           <div v-if="isImageFile(file.name)" class="relative group">
             <!-- 上传中状态 -->
-            <div v-if="file.status === 'uploading'" class="w-16 h-16 bg-white/90 backdrop-blur-sm rounded-lg border border-gray-300 flex items-center justify-center shadow-lg">
+            <div v-if="file.status === 'uploading'" class="w-16 h-16 bg-gray-200 rounded-lg border border-gray-300 flex items-center justify-center">
               <div class="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
             </div>
             
@@ -86,11 +75,11 @@
               v-else-if="file.status === 'success'"
               :src="file.preview" 
               alt="preview" 
-              class="w-16 h-16 object-cover rounded-lg border border-gray-200 shadow-lg" 
+              class="w-16 h-16 object-cover rounded-lg border border-gray-200" 
             />
             
             <!-- 上传失败状态 -->
-            <div v-else class="w-16 h-16 bg-red-100/90 backdrop-blur-sm rounded-lg border border-red-300 flex items-center justify-center shadow-lg">
+            <div v-else class="w-16 h-16 bg-red-100 rounded-lg border border-red-300 flex items-center justify-center">
               <i class="fas fa-exclamation-circle text-red-500"></i>
             </div>
             
@@ -107,7 +96,7 @@
           <!-- 非图片文件显示卡片 -->
           <div v-else class="relative group">
             <!-- 上传中状态 -->
-            <div v-if="file.status === 'uploading'" class="flex items-center gap-2 px-3 py-3 bg-white/90 backdrop-blur-sm rounded-lg border border-gray-300 min-w-0 w-48 shadow-lg">
+            <div v-if="file.status === 'uploading'" class="flex items-center gap-2 px-3 py-3 bg-gray-200 rounded-lg border border-gray-300 min-w-0 w-48">
               <div class="flex-shrink-0">
                 <div class="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
               </div>
@@ -118,7 +107,7 @@
             </div>
             
             <!-- 上传成功状态 -->
-            <div v-else-if="file.status === 'success'" class="flex items-center gap-2 px-3 py-3 bg-white/90 backdrop-blur-sm rounded-lg border border-gray-200 min-w-0 shadow-lg">
+            <div v-else-if="file.status === 'success'" class="flex items-center gap-2 px-3 py-3 bg-gray-50 rounded-lg border border-gray-200 min-w-0">
               <!-- 文件图标 -->
               <div class="flex-shrink-0">
                 <i :class="[getFileIcon(file.name), 'text-lg']" :style="{ color: getFileIconColor(file.name) }"></i>
@@ -140,7 +129,7 @@
             </div>
             
             <!-- 上传失败状态 -->
-            <div v-else class="flex items-center gap-2 px-3 py-3 bg-red-100/90 backdrop-blur-sm rounded-lg border border-red-300 min-w-0 shadow-lg">
+            <div v-else class="flex items-center gap-2 px-3 py-3 bg-red-100 rounded-lg border border-red-300 min-w-0">
               <div class="flex-shrink-0">
                 <i class="fas fa-exclamation-circle text-red-500 text-lg"></i>
               </div>
@@ -201,7 +190,6 @@
             <div class="flex items-center gap-3">
               <span class="text-xs text-gray-400">{{ inputLength }}/129024</span>
               <button
-                v-if="!isSending"
                 class="flex items-center justify-center w-8 h-8 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
                 :disabled="isModelNotSelected"
                 :class="{ 'opacity-50 cursor-not-allowed': isModelNotSelected }"
@@ -209,14 +197,6 @@
                 title="发送消息"
               >
                 <i class="fas fa-arrow-up text-sm"></i>
-              </button>
-              <button
-                v-else
-                class="flex items-center justify-center w-8 h-8 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors"
-                @click="cancelSend"
-                title="取消发送"
-              >
-                <i class="fas fa-times text-sm"></i>
               </button>
             </div>
           </div>
@@ -229,7 +209,6 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { uploadImage, uploadFile, deleteToolCache, processAgent } from '@/api/agent'
-import { marked } from 'marked'
 
 const uploadedFiles = ref([]) // 存储已上传文件对象 { name, size, type, preview }
 
@@ -281,10 +260,6 @@ const messages = ref([])
 const selectedFile = ref(null)   // 普通文件
 const imagePreview = ref('')     // 图片预览地址（base64）
 const uploading = ref(false)
-const isSending = ref(false)    // 发送状态
-const currentRequest = ref(null) // 当前请求的AbortController
-const fileHoverTimeout = ref(null) // 文件悬停延迟定时器
-const isFileHovered = ref(false) // 文件是否被悬停
 
 /* ---------- 方法 ---------- */
 const retryMessage = async (message) => {
@@ -293,75 +268,38 @@ const retryMessage = async (message) => {
     return
   }
 
-  // 找到当前 AI 消息的索引
-  const aiIndex = messages.value.findIndex(m => m.id === message.id)
-  if (aiIndex === -1) return
-
-  // 立即撤销当前AI回复，替换为加载状态
-  const loadingMessageId = Date.now() + 1
-  messages.value[aiIndex] = {
-    id: loadingMessageId,
-    content: '',
-    isAI: true,
-    isLoading: true
-  }
-
-  // 删除后续消息
-  if (aiIndex + 1 < messages.value.length) {
-    messages.value.splice(aiIndex + 1, messages.value.length - aiIndex - 1)
-  }
-
   // 使用原消息内容作为新请求体
   const payload = {
     ...localAgentData.value,
     message: message.content,
   }
 
-  // 创建AbortController用于取消请求
-  const abortController = new AbortController()
-  currentRequest.value = abortController
-
   try {
     // 调用 API 重新处理
-    const response = await processAgent(props.agentId, payload, { signal: abortController.signal })
+    const response = await processAgent(props.agentId, payload)
 
     console.log('✅ 重新生成请求成功:', response.data)
 
-    // 替换加载消息为新的AI回复
+    // 找到当前 AI 消息的索引
+    const aiIndex = messages.value.findIndex(m => m.id === message.id)
+    if (aiIndex !== -1) {
+      // 删除从当前 AI 消息开始的所有后续消息（包括它自己）
+      messages.value.splice(aiIndex, messages.value.length - aiIndex)
+    }
+
+    // 添加新的 AI 回复
     if (response.data && response.data.result) {
-      messages.value[aiIndex] = {
-        id: loadingMessageId,
+      messages.value.push({
+        id: Date.now() + 1,
         content: response.data.result,
         isAI: true,
         stats: response.data.stats
-      }
+      })
     } else {
-      // 如果返回数据有问题，显示错误信息
-      messages.value[aiIndex] = {
-        id: loadingMessageId,
-        content: '抱歉，AI 回复出现错误',
-        isAI: true
-      }
       console.warn('返回数据中缺少 result 字段')
     }
   } catch (error) {
-    // 如果是用户主动取消，不显示错误信息
-    if (error.name === 'AbortError') {
-      console.log('用户取消了重新生成请求')
-      return
-    }
-    
     console.error('❌ 重新生成失败:', error.response?.data || error.message)
-    
-    // 替换加载消息为错误信息
-    messages.value[aiIndex] = {
-      id: loadingMessageId,
-      content: '抱歉，重新生成失败，请稍后重试',
-      isAI: true
-    }
-  } finally {
-    // 重置请求状态
-    currentRequest.value = null
   }
 }
 
@@ -374,117 +312,38 @@ const handleSubmit = async () => {
   const messageContent = inputText.value.trim()
   if (!messageContent) return
 
-  // 立即推送用户消息并清空输入框
-  messages.value.push({ id: Date.now(), content: messageContent })
-  inputText.value = ''
-
-  // 设置发送状态
-  isSending.value = true
-
-  // 添加加载状态
-  const loadingMessageId = Date.now() + 1
-  messages.value.push({
-    id: loadingMessageId,
-    content: '',
-    isAI: true,
-    isLoading: true
-  })
-
   // 构造请求体
   const payload = {
     ...localAgentData.value,
     message: messageContent,
   }
 
-  // 创建AbortController用于取消请求
-  const abortController = new AbortController()
-  currentRequest.value = abortController
-
   try {
     // 调用 API 发送请求并获取响应
-    const response = await processAgent(props.agentId, payload, { signal: abortController.signal })
+    const response = await processAgent(props.agentId, payload)
 
     console.log('�� 发送的消息:', payload)
     console.log('✅ 返回的消息:', response.data) // 👈 打印返回结果
 
-    // 找到加载消息并替换为实际回复
-    const loadingIndex = messages.value.findIndex(m => m.id === loadingMessageId)
-    if (loadingIndex !== -1) {
-      if (response.data && response.data.result) {
-        messages.value[loadingIndex] = {
-          id: loadingMessageId,
-          content: response.data.result,
-          isAI: true,
-          stats: response.data.stats
-        }
-      } else {
-        // 如果返回数据有问题，显示错误信息
-        messages.value[loadingIndex] = {
-          id: loadingMessageId,
-          content: '抱歉，AI 回复出现错误',
-          isAI: true
-        }
-        console.warn('返回数据中缺少 result 字段')
-      }
+    // 成功后更新本地消息列表
+    messages.value.push({ id: Date.now(), content: messageContent })
+
+    // ✅ 添加 AI 回复消息
+    if (response.data && response.data.result) {
+      messages.value.push({
+        id: Date.now() + 1,
+        content: response.data.result,
+        isAI: true, // 可选：标记为 AI 消息
+        stats: response.data.stats
+      })
+    } else {
+      console.warn('返回数据中缺少 result 字段')
     }
+
+    inputText.value = ''
   } catch (error) {
-    // 如果是用户主动取消，不显示错误信息
-    if (error.name === 'AbortError') {
-      console.log('用户取消了请求')
-      // 移除加载消息
-      const loadingIndex = messages.value.findIndex(m => m.id === loadingMessageId)
-      if (loadingIndex !== -1) {
-        messages.value.splice(loadingIndex, 1)
-      }
-      return
-    }
-    
     console.error('❌ 请求失败:', error.response?.data || error.message)
-    
-    // 找到加载消息并替换为错误信息
-    const loadingIndex = messages.value.findIndex(m => m.id === loadingMessageId)
-    if (loadingIndex !== -1) {
-      messages.value[loadingIndex] = {
-        id: loadingMessageId,
-        content: '抱歉，请求失败，请稍后重试',
-        isAI: true
-      }
-    }
-  } finally {
-    // 重置发送状态
-    isSending.value = false
-    currentRequest.value = null
   }
-}
-
-// 取消发送
-const cancelSend = () => {
-  if (currentRequest.value) {
-    currentRequest.value.abort()
-    currentRequest.value = null
-  }
-  
-  // 立即移除所有加载状态的消息
-  messages.value = messages.value.filter(message => !message.isLoading)
-  
-  isSending.value = false
-}
-
-// 文件悬停处理
-const handleFileMouseEnter = () => {
-  // 清除之前的定时器
-  if (fileHoverTimeout.value) {
-    clearTimeout(fileHoverTimeout.value)
-    fileHoverTimeout.value = null
-  }
-  isFileHovered.value = true
-}
-
-const handleFileMouseLeave = () => {
-  // 设置延迟1秒后透明化
-  fileHoverTimeout.value = setTimeout(() => {
-    isFileHovered.value = false
-  }, 1000)
 }
 
 /* ---- 图片上传 ---- */
@@ -667,12 +526,6 @@ const isLatestAIMessage = (message) => {
   return message.id === latestAIMessage?.id
 }
 
-// Markdown 渲染方法
-const renderMarkdown = (content) => {
-  if (!content) return ''
-  return marked(content)
-}
-
 </script>
 
 <style scoped>
@@ -852,24 +705,13 @@ const renderMarkdown = (content) => {
   color: #6b7280;
 }
 
-.uploaded-files-floating {
-  position: absolute;
-  bottom: 340px;
-  left: 20px;
-  right: 20px;
-  z-index: 1000;
-  pointer-events: none;
-}
-
-.uploaded-files-floating .file-item {
-  pointer-events: auto;
-  opacity: 0.3;
-  transition: opacity 0.3s ease;
-}
-
-.uploaded-files-floating.file-hovered .file-item {
-  opacity: 1;
-  transition: opacity 0.2s ease;
+.uploaded-files-container {
+  margin: 0 20px;
+  flex-shrink: 0;
+  background: transparent;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .file-item {
@@ -899,150 +741,5 @@ textarea {
 
 textarea::-webkit-scrollbar {
   display: none; /* Chrome, Safari and Opera */
-}
-
-/* 加载动画样式 */
-.loading-container {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 0;
-}
-
-.loading-dots {
-  display: flex;
-  gap: 4px;
-}
-
-.dot {
-  width: 8px;
-  height: 8px;
-  background-color: #9ca3af;
-  border-radius: 50%;
-  animation: loading-bounce 1.4s infinite ease-in-out both;
-}
-
-.dot:nth-child(1) {
-  animation-delay: -0.32s;
-}
-
-.dot:nth-child(2) {
-  animation-delay: -0.16s;
-}
-
-.dot:nth-child(3) {
-  animation-delay: 0s;
-}
-
-@keyframes loading-bounce {
-  0%, 80%, 100% {
-    transform: scale(0);
-    opacity: 0.5;
-  }
-  40% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.loading-text {
-  color: #6b7280;
-  font-size: 14px;
-  font-style: italic;
-}
-
-/* Markdown 样式 */
-.message-text :deep(h1),
-.message-text :deep(h2),
-.message-text :deep(h3),
-.message-text :deep(h4),
-.message-text :deep(h5),
-.message-text :deep(h6) {
-  margin: 0.5em 0;
-  font-weight: bold;
-  line-height: 1.2;
-}
-
-.message-text :deep(h1) { font-size: 1.5em; }
-.message-text :deep(h2) { font-size: 1.3em; }
-.message-text :deep(h3) { font-size: 1.1em; }
-
-.message-text :deep(p) {
-  margin: 0.5em 0;
-  line-height: 1.5;
-}
-
-.message-text :deep(ul),
-.message-text :deep(ol) {
-  margin: 0.5em 0;
-  padding-left: 1.5em;
-}
-
-.message-text :deep(li) {
-  margin: 0.25em 0;
-}
-
-.message-text :deep(blockquote) {
-  margin: 0.5em 0;
-  padding: 0.5em 1em;
-  border-left: 4px solid #e5e7eb;
-  background-color: #f9fafb;
-  font-style: italic;
-}
-
-.message-text :deep(code) {
-  background-color: #f3f4f6;
-  padding: 0.2em 0.4em;
-  border-radius: 3px;
-  font-family: 'Courier New', monospace;
-  font-size: 0.9em;
-}
-
-.message-text :deep(pre) {
-  background-color: #f3f4f6;
-  padding: 1em;
-  border-radius: 6px;
-  overflow-x: auto;
-  margin: 0.5em 0;
-}
-
-.message-text :deep(pre code) {
-  background: none;
-  padding: 0;
-}
-
-.message-text :deep(a) {
-  color: #3b82f6;
-  text-decoration: underline;
-}
-
-.message-text :deep(a:hover) {
-  color: #1d4ed8;
-}
-
-.message-text :deep(strong) {
-  font-weight: bold;
-}
-
-.message-text :deep(em) {
-  font-style: italic;
-}
-
-.message-text :deep(table) {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 0.5em 0;
-}
-
-.message-text :deep(th),
-.message-text :deep(td) {
-  border: 1px solid #d1d5db;
-  padding: 0.5em;
-  text-align: left;
-}
-
-.message-text :deep(th) {
-  background-color: #f9fafb;
-  font-weight: bold;
 }
 </style>
