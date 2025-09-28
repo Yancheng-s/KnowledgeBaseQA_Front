@@ -40,7 +40,7 @@ function createMainWindow() {
 
 // 创建浮动窗口
 function createFloatingWindow(options) {
-  const { agentId, agentName, width = 400, height = 650, minWidth = 350, minHeight = 500 } = options;
+  const { agentId, agentName, width = 500, height = 900, minWidth = 400, minHeight = 600 } = options;
   
   console.log(`🪟 创建浮动窗口: ${agentName} (${agentId})`);
   
@@ -57,15 +57,16 @@ function createFloatingWindow(options) {
 
   // 创建新窗口
   const floatingWindow = new BrowserWindow({
-    width,
-    height,
-    minWidth,
-    minHeight,
+    width: width + 20,  // 增加边框宽度
+    height: height + 250, // 增加边框高度
+    minWidth: minWidth + 20,
+    minHeight: minHeight + 250,
     alwaysOnTop: true,
     resizable: true,
     frame: false,
     transparent: true,
     show: false,
+    fullscreenable: true,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -164,7 +165,13 @@ ipcMain.handle('close-all-floating-windows', async (event) => {
   }
 });
 
-// 拖拽功能由CSS的-webkit-app-region处理，无需IPC处理
+// 处理关闭当前窗口
+ipcMain.on('close-current-window', (event) => {
+  const window = BrowserWindow.fromWebContents(event.sender);
+  if (window) {
+    window.close();
+  }
+});
 
 // 处理置顶事件
 ipcMain.on('set-always-on-top', (event, alwaysOnTop) => {
@@ -178,7 +185,50 @@ ipcMain.on('set-always-on-top', (event, alwaysOnTop) => {
 ipcMain.on('toggle-fullscreen', (event, isFullscreen) => {
   const window = BrowserWindow.fromWebContents(event.sender);
   if (window) {
-    window.setFullScreen(isFullscreen);
+    console.log(`收到全屏请求: ${isFullscreen}`);
+    try {
+      if (isFullscreen) {
+        // 全屏时确保窗口位置正确
+        const { screen } = require('electron');
+        const primaryDisplay = screen.getPrimaryDisplay();
+        const { width, height } = primaryDisplay.workAreaSize;
+        
+        // 设置窗口大小和位置，留出边距
+        const marginX = Math.floor(width * 0.025); // 2.5%边距
+        const marginY = Math.floor(height * 0.025); // 2.5%边距
+        const windowWidth = width - (marginX * 2);
+        const windowHeight = height - (marginY * 2);
+        
+        window.setBounds({
+          x: marginX,
+          y: marginY,
+          width: windowWidth,
+          height: windowHeight
+        });
+        
+        // 然后设置全屏
+        window.setFullScreen(true);
+        console.log(`已设置全屏模式: ${isFullscreen}, 位置: ${marginX},${marginY}, 大小: ${windowWidth}x${windowHeight}`);
+      } else {
+        // 退出全屏时恢复原始大小
+        window.setFullScreen(false);
+        window.setBounds({
+          x: 100,
+          y: 100,
+          width: 420,  // 400 + 20边框
+          height: 870  // 850 + 20边框
+        });
+        console.log(`已退出全屏模式`);
+      }
+      
+      // 通知渲染进程全屏状态变化
+      setTimeout(() => {
+        event.sender.send('fullscreen-changed', isFullscreen);
+      }, 100);
+    } catch (error) {
+      console.error('全屏操作失败:', error);
+      // 即使Electron全屏失败，CSS全屏仍然会工作
+    }
   }
 });
 

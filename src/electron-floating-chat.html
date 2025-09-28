@@ -30,15 +30,20 @@
       height: 100vh;
       top: 0;
       left: 0;
+      padding: 10px;
+      box-sizing: border-box;
     }
     
     .electron-floating-chat-container.fullscreen {
       position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      width: 100vw !important;
-      height: 100vh !important;
+      top: 2.5vh !important;
+      left: 2.5vw !important;
+      width: 95vw !important;
+      height: 95vh !important;
       z-index: 10001 !important;
+      transform: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
     }
     
     .electron-floating-chat-container.pinned {
@@ -50,26 +55,26 @@
       background: white;
       border-radius: 12px;
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-      width: 370px;
-      height: 600px;
+      width: 400px;
+      height: 850px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
       transition: all 0.3s ease;
       border: 1px solid #e5e7eb;
-      margin: 20px;
+      margin: 10px;
       position: relative;
     }
     
     .electron-floating-chat-window.fullscreen {
-      width: 95vw !important;
-      height: 95vh !important;
-      position: fixed !important;
-      top: 50% !important;
-      left: 50% !important;
-      transform: translate(-50%, -50%) !important;
-      z-index: 10001 !important;
-      border-radius: 8px;
+      width: 100% !important;
+      height: 100% !important;
+      position: relative !important;
+      top: 0 !important;
+      left: 0 !important;
+      transform: none !important;
+      z-index: 1 !important;
+      border-radius: 12px !important;
       margin: 0 !important;
     }
     
@@ -147,6 +152,8 @@
       padding: 20px 24px;
       scrollbar-width: none;
       -ms-overflow-style: none;
+      min-height: 0;
+      max-height: calc(100% - 120px);
     }
     
     .electron-floating-chat-content::-webkit-scrollbar {
@@ -309,7 +316,10 @@
     }
     
     .electron-floating-chat-input {
-      padding: 16px 24px;
+      padding: 20px 24px 24px 24px;
+      background: white;
+      border-top: 1px solid #f3f4f6;
+      flex-shrink: 0;
     }
     
     .input-container {
@@ -561,6 +571,32 @@
     function init() {
       setupEventListeners();
       updateUI();
+      setupElectronListeners();
+    }
+    
+    // 设置Electron事件监听
+    function setupElectronListeners() {
+      if (window.require) {
+        const { ipcRenderer } = window.require('electron');
+        
+        // 监听全屏状态变化
+        ipcRenderer.on('fullscreen-changed', (event, isFullscreen) => {
+          console.log('收到全屏状态变化:', isFullscreen);
+          isFullscreen = isFullscreen;
+          updateFullscreenUI();
+        });
+      }
+    }
+    
+    // 更新全屏UI
+    function updateFullscreenUI() {
+      if (isFullscreen) {
+        fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+        fullscreenBtn.title = '退出全屏';
+      } else {
+        fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+        fullscreenBtn.title = '全屏';
+      }
     }
     
     // 设置事件监听器
@@ -694,22 +730,72 @@
     function toggleFullscreen() {
       isFullscreen = !isFullscreen;
       
-      if (isFullscreen) {
-        // 使用Electron API进入全屏
-        if (window.require) {
-          const { ipcRenderer } = window.require('electron');
-          ipcRenderer.send('toggle-fullscreen', true);
+      if (window.require) {
+        const { ipcRenderer } = window.require('electron');
+        console.log('发送全屏切换请求:', isFullscreen);
+        ipcRenderer.send('toggle-fullscreen', isFullscreen);
+        
+        // 同时使用CSS全屏作为备用
+        if (isFullscreen) {
+          chatContainer.classList.add('fullscreen');
+          chatWindow.classList.add('fullscreen');
+          // 强制重置位置，防止吸附到底部
+          setTimeout(() => {
+            forceResetFullscreenPosition();
+          }, 50);
+        } else {
+          chatContainer.classList.remove('fullscreen');
+          chatWindow.classList.remove('fullscreen');
+          // 退出全屏时也重置位置
+          setTimeout(() => {
+            forceResetFullscreenPosition();
+          }, 50);
         }
-        fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
-        fullscreenBtn.title = '退出全屏';
       } else {
-        // 使用Electron API退出全屏
-        if (window.require) {
-          const { ipcRenderer } = window.require('electron');
-          ipcRenderer.send('toggle-fullscreen', false);
+        // 浏览器环境
+        if (isFullscreen) {
+          chatContainer.classList.add('fullscreen');
+          chatWindow.classList.add('fullscreen');
+          // 强制重置位置，防止吸附到底部
+          setTimeout(() => {
+            forceResetFullscreenPosition();
+          }, 50);
+        } else {
+          chatContainer.classList.remove('fullscreen');
+          chatWindow.classList.remove('fullscreen');
+          // 退出全屏时也重置位置
+          setTimeout(() => {
+            forceResetFullscreenPosition();
+          }, 50);
         }
-        fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
-        fullscreenBtn.title = '全屏';
+      }
+      
+      updateFullscreenUI();
+    }
+    
+    // 强制重置全屏位置
+    function forceResetFullscreenPosition() {
+      if (isFullscreen) {
+        chatContainer.style.position = 'fixed';
+        chatContainer.style.top = '2.5vh';
+        chatContainer.style.left = '2.5vw';
+        chatContainer.style.width = '95vw';
+        chatContainer.style.height = '95vh';
+        chatContainer.style.transform = 'none';
+        chatContainer.style.margin = '0';
+        chatContainer.style.padding = '0';
+        console.log('强制重置全屏位置');
+      } else {
+        // 退出全屏时重置为默认样式
+        chatContainer.style.position = 'fixed';
+        chatContainer.style.top = '0';
+        chatContainer.style.left = '0';
+        chatContainer.style.width = '100vw';
+        chatContainer.style.height = '100vh';
+        chatContainer.style.transform = 'none';
+        chatContainer.style.margin = '0';
+        chatContainer.style.padding = '0';
+        console.log('重置退出全屏位置');
       }
     }
     
@@ -717,7 +803,14 @@
     function closeWindow() {
       if (window.require) {
         const { ipcRenderer } = window.require('electron');
-        ipcRenderer.send('close-floating-window');
+        // 直接关闭当前窗口
+        const { remote } = window.require('electron');
+        if (remote && remote.getCurrentWindow) {
+          remote.getCurrentWindow().close();
+        } else {
+          // 备用方法：发送关闭请求
+          ipcRenderer.send('close-current-window');
+        }
       } else {
         window.close();
       }
