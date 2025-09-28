@@ -29,3 +29,7 @@ export const selectAllFileServer = (data) => {
 export const selectFilesByNameServer = (data) => {
   return request.post('/selectfilebyname', data)
 }
+
+export const deleteFileByNameServer = (data) => {
+  return request.post('/deletefilebyname', data)
+}

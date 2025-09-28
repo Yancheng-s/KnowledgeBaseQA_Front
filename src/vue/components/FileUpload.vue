@@ -111,7 +111,7 @@
                 <div class="text-right text-sm font-medium">
                   <button class="text-blue-600 hover:text-blue-900 mr-3">预览</button>
                   <button @click="downloadFile(file)" class="text-blue-600 hover:text-blue-900 mr-3">下载</button>
-                  <button class="text-red-600 hover:text-red-900">删除</button>
+                  <button @click="deleteFile(file)" class="text-red-600 hover:text-red-900">删除</button>
                 </div>
               </div>
             </div>
@@ -290,13 +290,41 @@
       </div>
     </div>
 
+    <!-- 文件删除确认弹窗 -->
+    <div v-if="showFileDeleteModal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg p-6 min-w-[400px]">
+        <h3 class="text-lg font-medium mb-4">确认删除文件</h3>
+        <p class="mb-6 text-gray-600">
+          你确定要删除文件 "{{ fileToDelete?.file_name }}" 吗？
+          <span style="color: red; display: block; margin-top: 8px;">
+            此操作不可撤销
+          </span>
+        </p>
+
+        <div class="flex justify-end space-x-3">
+          <button
+            @click="showFileDeleteModal = false; fileToDelete = null"
+            class="!rounded-button px-4 py-2 border border-gray-300 hover:bg-gray-50"
+          >
+            取消
+          </button>
+          <button
+            @click="confirmDeleteFile"
+            class="!rounded-button px-4 py-2 bg-red-600 text-white hover:bg-red-700"
+          >
+            确定删除
+          </button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { ElMessage } from 'element-plus'
-import { addNewFolderServer,selectAllFolderServer,updateFolderNameServer,delateFolderServer,uploadFileServer, selectAllFileServer, selectFilesByNameServer } from '@/api/folder';
+import { addNewFolderServer,selectAllFolderServer,updateFolderNameServer,delateFolderServer,uploadFileServer, selectAllFileServer, selectFilesByNameServer, deleteFileByNameServer } from '@/api/folder';
 
 
 const currentFolder = ref('总览');
@@ -310,6 +338,10 @@ const showFolderTableModal = ref(false); // 控制弹窗显示
 const folderOperationType = ref<number | null>(null); // 当前操作类型：1=修改，0=删除
 const currentFolderName = ref<string>(''); // 当前操作的文件夹名称
 const editedFolderName = ref<string>(''); // 修改后的文件夹名称
+
+// 文件删除相关状态
+const showFileDeleteModal = ref(false); // 控制文件删除确认弹窗
+const fileToDelete = ref<any>(null); // 要删除的文件信息
 
 const overviewIcon = new URL('@/img/0c016d545482987f0ca9e4baa92476e1.jpg', import.meta.url).href;
 
@@ -379,7 +411,7 @@ const selectAllFolder = async () => {
     const folder = folders.value[i];
     const count = await getFolderFileCount(folder.folder_name);
     // 更新对应的文件夹数量
-    folders.value[i].count = count;
+    folders.value[i].count = count.toString();
   }
 };
 
@@ -753,6 +785,40 @@ const downloadFile = async (file: any) => {
   } catch (error) {
     console.error('下载文件失败:', error);
     ElMessage.error('下载文件失败，请检查文件路径');
+  }
+};
+
+// 删除文件功能
+const deleteFile = (file: any) => {
+  fileToDelete.value = file;
+  showFileDeleteModal.value = true;
+};
+
+// 确认删除文件
+const confirmDeleteFile = async () => {
+  if (!fileToDelete.value) return;
+  
+  try {
+    await deleteFileByNameServer({ file_name: fileToDelete.value.file_name });
+    ElMessage.success(`文件 ${fileToDelete.value.file_name} 已成功删除`);
+    
+    // 刷新文件列表
+    if (currentFolder.value === '总览') {
+      await selectAllFiles();
+    } else {
+      await selectAllFiles(currentFolder.value);
+    }
+    
+    // 刷新文件夹列表和总览数量
+    await selectAllFolder();
+    await totalFiles();
+    
+    // 关闭弹窗
+    showFileDeleteModal.value = false;
+    fileToDelete.value = null;
+  } catch (error) {
+    console.error('删除文件失败:', error);
+    ElMessage.error('删除文件失败，请重试');
   }
 };
 
