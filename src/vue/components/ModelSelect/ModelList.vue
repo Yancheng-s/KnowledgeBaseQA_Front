@@ -1,6 +1,7 @@
 <template>
-    <!-- 搜索区域 -->
-    <div class="flex items-center justify-between px-4 py-6">
+  <div class="h-full flex flex-col">
+    <!-- 搜索区域 - 固定不滚动 -->
+    <div class="flex items-center justify-between px-4 py-6 flex-shrink-0 bg-gray-50">
       <div class="flex space-x-4">
         <button class="!rounded-button flex items-center px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50"
           @click="showAddModel = true">
@@ -27,8 +28,10 @@
         @submit="handleAddModel"
     />
     
-    <!-- 模型卡片列表 -->
-    <div class="grid grid-cols-3 gap-4 px-4 pb-6">
+    <!-- 可滚动的内容区域 -->
+    <div class="flex-1 overflow-y-auto scrollbar-hide">
+      <!-- 模型卡片列表 -->
+      <div class="grid grid-cols-3 gap-4 px-4 pb-6">
         <div
             v-for="item in modelList"
             :key="item.id"
@@ -73,7 +76,9 @@
               </button>
             </div>
         </div>
+      </div>
     </div>
+  </div>
 </template>
 
 <script lang="ts" setup>

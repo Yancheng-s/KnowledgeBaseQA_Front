@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- 顶部导航 -->
-    <nav class="bg-white shadow-sm">
+  <div class="h-screen bg-gray-50 flex flex-col">
+    <!-- 顶部导航 - 固定不滚动 -->
+    <nav class="bg-white shadow-sm flex-shrink-0">
       <div class="max-w-7xl px-4 h-16 flex items-center">
         <div class="flex items-center space-x-2 text-gray-600">
           <span>模型广场</span>
@@ -12,8 +12,10 @@
       </div>
     </nav>
 
-    <!-- 条件渲染组件 -->
-    <ModelList />
+    <!-- 内容区域 - 可滚动 -->
+    <div class="flex-1 overflow-y-auto">
+      <ModelList />
+    </div>
   </div>
 </template>
 
