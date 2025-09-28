@@ -108,12 +108,9 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue';
 import { addAgent, selectAllAgents } from '@/api/agent';
+import agentIcon from '@/img/agent/智能体.png';
 import { generateUniqueIntId } from '@/utils/generateId';
 import FloatingChat from './FloatingChat.vue';
-import electronWindowManager from '@/utils/electron-window';
-
-// 图片导入
-const agentIcon = '/src/img/agent/智能体.png';
 
 // 定义事件发射
 const emit = defineEmits(['create-agent']);
@@ -267,40 +264,9 @@ const handleLeaveButton = (id: string) => {
 };
 
 // 悬浮窗相关方法
-const openFloatingChat = async (agentId: string) => {
-  console.log('🔍 环境检测结果:', {
-    isElectron: electronWindowManager.isElectron,
-    windowProcess: typeof window !== 'undefined' ? window.process : 'undefined',
-    processType: typeof window !== 'undefined' && window.process ? window.process.type : 'undefined'
-  });
-  
-  // 检查是否在Electron环境中
-  if (electronWindowManager.isElectron) {
-    // 在Electron环境中，创建独立窗口
-    try {
-      const agent = applications.value.find(app => app.id === agentId);
-      const agentName = agent ? agent.name : 'AI助手';
-      
-      const windowId = await electronWindowManager.createFloatingWindow(agentId, agentName);
-      if (windowId) {
-        console.log(`成功创建Electron窗口，窗口ID: ${windowId}`);
-      } else {
-        console.warn('创建Electron窗口失败，回退到普通悬浮窗');
-        // 回退到普通悬浮窗
-        selectedAgentId.value = agentId;
-        showFloatingChat.value = true;
-      }
-    } catch (error) {
-      console.error('创建Electron窗口时出错:', error);
-      // 回退到普通悬浮窗
-      selectedAgentId.value = agentId;
-      showFloatingChat.value = true;
-    }
-  } else {
-    // 不在Electron环境中，使用普通悬浮窗
-    selectedAgentId.value = agentId;
-    showFloatingChat.value = true;
-  }
+const openFloatingChat = (agentId: string) => {
+  selectedAgentId.value = agentId;
+  showFloatingChat.value = true;
 };
 
 const closeFloatingChat = () => {

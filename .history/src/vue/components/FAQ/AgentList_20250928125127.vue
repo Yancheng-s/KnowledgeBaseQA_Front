@@ -268,12 +268,6 @@ const handleLeaveButton = (id: string) => {
 
 // 悬浮窗相关方法
 const openFloatingChat = async (agentId: string) => {
-  console.log('🔍 环境检测结果:', {
-    isElectron: electronWindowManager.isElectron,
-    windowProcess: typeof window !== 'undefined' ? window.process : 'undefined',
-    processType: typeof window !== 'undefined' && window.process ? window.process.type : 'undefined'
-  });
-  
   // 检查是否在Electron环境中
   if (electronWindowManager.isElectron) {
     // 在Electron环境中，创建独立窗口

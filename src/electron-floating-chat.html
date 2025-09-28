@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI助手</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: transparent;
+      height: 100vh;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .electron-floating-chat-container {
+      position: fixed;
+      z-index: 9999;
+      user-select: none;
+      width: 100vw;
+      height: 100vh;
+      top: 0;
+      left: 0;
+    }
+    
+    .electron-floating-chat-container.fullscreen {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 10001 !important;
+    }
+    
+    .electron-floating-chat-container.pinned {
+      z-index: 99999 !important;
+      position: fixed !important;
+    }
+    
+    .electron-floating-chat-window {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      width: 370px;
+      height: 600px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      border: 1px solid #e5e7eb;
+      margin: 20px;
+      position: relative;
+    }
+    
+    .electron-floating-chat-window.fullscreen {
+      width: 95vw !important;
+      height: 95vh !important;
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      z-index: 10001 !important;
+      border-radius: 8px;
+      margin: 0 !important;
+    }
+    
+    .electron-floating-chat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      cursor: move;
+      user-select: none;
+      background: #f8fafc;
+      border-bottom: 1px solid #e5e7eb;
+      -webkit-app-region: drag;
+    }
+    
+    .pin-btn {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: transparent;
+      color: #6b7280;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      -webkit-app-region: no-drag;
+    }
+    
+    .pin-btn:hover {
+      background: #f3f4f6;
+      color: #374151;
+      transform: scale(1.1);
+    }
+    
+    .pin-btn.pinned {
+      color: #3b82f6;
+      background: #eff6ff;
+    }
+    
+    .pin-btn.pinned:hover {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+    
+    .electron-floating-chat-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .action-btn {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: transparent;
+      color: #6b7280;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      -webkit-app-region: no-drag;
+    }
+    
+    .action-btn:hover {
+      background: #f3f4f6;
+      color: #374151;
+    }
+    
+    .electron-floating-chat-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    
+    .electron-floating-chat-content::-webkit-scrollbar {
+      display: none;
+    }
+    
+    .electron-floating-chat-empty {
+      text-align: center;
+      padding: 40px 20px;
+    }
+    
+    .empty-illustration {
+      margin-bottom: 24px;
+    }
+    
+    .hexagon-shape {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .illustration-icon {
+      font-size: 48px;
+      color: white;
+      z-index: 1;
+    }
+    
+    .empty-message {
+      font-size: 16px;
+      color: #374151;
+      margin: 0 0 24px;
+      font-weight: 500;
+    }
+    
+    .hot-searches {
+      background: #f9fafb;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: left;
+    }
+    
+    .hot-searches-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #374151;
+      margin: 0 0 12px;
+    }
+    
+    .hot-searches-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    .hot-tag {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 12px;
+      color: #374151;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .hot-tag:hover {
+      background: #f3f4f6;
+      border-color: #d1d5db;
+    }
+    
+    .electron-floating-chat-messages {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .electron-floating-message-item {
+      display: flex;
+      width: 100%;
+    }
+    
+    .electron-floating-user-message {
+      justify-content: flex-end;
+    }
+    
+    .electron-floating-ai-message {
+      justify-content: flex-start;
+    }
+    
+    .electron-floating-message-bubble {
+      max-width: 80%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .user-bubble {
+      background: #f3f4f6;
+      color: #374151;
+    }
+    
+    .ai-bubble {
+      background: white;
+      border: 1px solid #e5e7eb;
+      color: #374151;
+    }
+    
+    .electron-floating-message-text {
+      font-size: 14px;
+      line-height: 1.5;
+      word-wrap: break-word;
+    }
+    
+    .electron-floating-loading-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+    }
+    
+    .electron-floating-loading-dots {
+      display: flex;
+      gap: 4px;
+    }
+    
+    .electron-floating-dot {
+      width: 6px;
+      height: 6px;
+      background-color: #9ca3af;
+      border-radius: 50%;
+      animation: electron-floating-bounce 1.4s infinite ease-in-out both;
+    }
+    
+    .electron-floating-dot:nth-child(1) { animation-delay: -0.32s; }
+    .electron-floating-dot:nth-child(2) { animation-delay: -0.16s; }
+    .electron-floating-dot:nth-child(3) { animation-delay: 0s; }
+    
+    @keyframes electron-floating-bounce {
+      0%, 80%, 100% {
+        transform: scale(0);
+        opacity: 0.5;
+      }
+      40% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    
+    .electron-floating-loading-text {
+      color: #6b7280;
+      font-size: 14px;
+      font-style: italic;
+    }
+    
+    .electron-floating-chat-input {
+      padding: 16px 24px;
+    }
+    
+    .input-container {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    
+    .electron-floating-textarea {
+      flex: 1;
+      padding: 0 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      resize: none;
+      outline: none;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      height: 40px;
+      line-height: 40px;
+      box-sizing: border-box;
+      background: white;
+      color: #374151;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    
+    .electron-floating-textarea::-webkit-scrollbar {
+      display: none;
+    }
+    
+    .electron-floating-textarea:focus {
+      border-color: #1d4ed8;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      background: white;
+    }
+    
+    .electron-floating-textarea::placeholder {
+      color: #9ca3af;
+    }
+    
+    .electron-floating-send-btn {
+      width: 40px;
+      height: 40px;
+      background: #1d4ed8;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+    
+    .electron-floating-send-btn:hover:not(:disabled) {
+      background: #1d4ed8;
+    }
+    
+    .electron-floating-send-btn:disabled {
+      background: #d1d5db;
+      cursor: not-allowed;
+    }
+    
+    /* Markdown 样式 */
+    .electron-floating-message-text h1,
+    .electron-floating-message-text h2,
+    .electron-floating-message-text h3,
+    .electron-floating-message-text h4,
+    .electron-floating-message-text h5,
+    .electron-floating-message-text h6 {
+      margin: 0.5em 0;
+      font-weight: bold;
+      line-height: 1.2;
+    }
+    
+    .electron-floating-message-text h1 { font-size: 1.3em; }
+    .electron-floating-message-text h2 { font-size: 1.2em; }
+    .electron-floating-message-text h3 { font-size: 1.1em; }
+    
+    .electron-floating-message-text p {
+      margin: 0.5em 0;
+      line-height: 1.5;
+    }
+    
+    .electron-floating-message-text ul,
+    .electron-floating-message-text ol {
+      margin: 0.5em 0;
+      padding-left: 1.5em;
+    }
+    
+    .electron-floating-message-text li {
+      margin: 0.25em 0;
+    }
+    
+    .electron-floating-message-text blockquote {
+      margin: 0.5em 0;
+      padding: 0.5em 1em;
+      border-left: 4px solid #e5e7eb;
+      background-color: #f9fafb;
+      font-style: italic;
+    }
+    
+    .electron-floating-message-text code {
+      background-color: #f3f4f6;
+      padding: 0.2em 0.4em;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+    
+    .electron-floating-message-text pre {
+      background-color: #f3f4f6;
+      padding: 1em;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 0.5em 0;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    
+    .electron-floating-message-text pre::-webkit-scrollbar {
+      display: none;
+    }
+    
+    .electron-floating-message-text pre code {
+      background: none;
+      padding: 0;
+    }
+    
+    .electron-floating-message-text a {
+      color: #3b82f6;
+      text-decoration: underline;
+    }
+    
+    .electron-floating-message-text a:hover {
+      color: #1d4ed8;
+    }
+    
+    .electron-floating-message-text strong {
+      font-weight: bold;
+    }
+    
+    .electron-floating-message-text em {
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="electron-floating-chat-container" id="chatContainer">
+    <div class="electron-floating-chat-window" id="chatWindow">
+      <!-- 头部 -->
+      <div class="electron-floating-chat-header" id="chatHeader">
+        <button class="pin-btn" id="pinBtn" title="置顶窗口">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2l-1.5 1.5L12 5l1.5-1.5L12 2z"/>
+            <path d="M12 5v13"/>
+            <circle cx="12" cy="20" r="2"/>
+          </svg>
+        </button>
+        <div class="electron-floating-chat-actions">
+          <button class="action-btn" id="fullscreenBtn" title="全屏">
+            <i class="fas fa-expand"></i>
+          </button>
+          <button class="action-btn" id="closeBtn" title="关闭">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- 主要内容区域 -->
+      <div class="electron-floating-chat-content" id="chatContent">
+        <!-- 空状态 -->
+        <div id="emptyState" class="electron-floating-chat-empty">
+          <div class="empty-illustration">
+            <div class="hexagon-shape">
+              <i class="fas fa-comments illustration-icon"></i>
+            </div>
+          </div>
+          <p class="empty-message">即刻开启AI对话</p>
+          
+          <!-- 热门问题 -->
+          <div class="hot-searches">
+            <h4 class="hot-searches-title">热门问题</h4>
+            <div class="hot-searches-tags">
+              <span class="hot-tag">如何使用AI助手？</span>
+              <span class="hot-tag">模型调用方法</span>
+              <span class="hot-tag">API接口说明</span>
+              <span class="hot-tag">智能体配置</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 对话列表 -->
+        <div id="messagesContainer" class="electron-floating-chat-messages" style="display: none;">
+        </div>
+      </div>
+
+      <!-- 输入框 -->
+      <div class="electron-floating-chat-input">
+        <div class="input-container">
+          <textarea
+            id="messageInput"
+            class="electron-floating-textarea"
+            placeholder="输入您的问题..."
+            rows="2"
+          ></textarea>
+          <button 
+            id="sendBtn"
+            class="electron-floating-send-btn"
+          >
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 从URL参数获取agentId和agentName
+    const urlParams = new URLSearchParams(window.location.search);
+    const agentId = urlParams.get('agentId') || null;
+    const agentName = urlParams.get('agentName') || 'AI助手';
+    
+    // 状态管理
+    let messages = [];
+    let isPinned = false;
+    let isFullscreen = false;
+    let isDragging = false;
+    let dragStart = { x: 0, y: 0 };
+    let position = { x: 100, y: 100 };
+    let forceTopInterval = null;
+    
+    // DOM元素
+    const chatContainer = document.getElementById('chatContainer');
+    const chatWindow = document.getElementById('chatWindow');
+    const chatHeader = document.getElementById('chatHeader');
+    const pinBtn = document.getElementById('pinBtn');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const closeBtn = document.getElementById('closeBtn');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const chatContent = document.getElementById('chatContent');
+    const emptyState = document.getElementById('emptyState');
+    const messagesContainer = document.getElementById('messagesContainer');
+    
+    // 初始化
+    function init() {
+      setupEventListeners();
+      updateUI();
+    }
+    
+    // 设置事件监听器
+    function setupEventListeners() {
+      // 置顶按钮
+      pinBtn.addEventListener('click', togglePin);
+      
+      // 全屏按钮
+      fullscreenBtn.addEventListener('click', toggleFullscreen);
+      
+      // 关闭按钮
+      closeBtn.addEventListener('click', closeWindow);
+      
+      // 发送按钮
+      sendBtn.addEventListener('click', sendMessage);
+      
+      // 拖拽功能由CSS的-webkit-app-region处理
+      
+      // 输入框事件
+      messageInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+      
+      // 热门问题点击
+      document.querySelectorAll('.hot-tag').forEach(tag => {
+        tag.addEventListener('click', () => {
+          messageInput.value = tag.textContent;
+          sendMessage();
+        });
+      });
+    }
+    
+    // 拖拽功能由CSS的-webkit-app-region处理，无需JavaScript
+    
+    // 切换置顶
+    function togglePin() {
+      isPinned = !isPinned;
+      pinBtn.classList.toggle('pinned', isPinned);
+      
+      if (isPinned) {
+        pinBtn.title = '取消置顶';
+        // 使用Electron API设置置顶
+        if (window.require) {
+          const { ipcRenderer } = window.require('electron');
+          ipcRenderer.send('set-always-on-top', true);
+        }
+      } else {
+        pinBtn.title = '置顶窗口';
+        // 取消置顶
+        if (window.require) {
+          const { ipcRenderer } = window.require('electron');
+          ipcRenderer.send('set-always-on-top', false);
+        }
+      }
+      
+      // 短暂闪烁效果提示用户
+      chatContainer.style.transform = 'scale(1.02)';
+      chatContainer.style.transition = 'transform 0.15s ease';
+      setTimeout(() => {
+        chatContainer.style.transform = 'scale(1)';
+        setTimeout(() => {
+          chatContainer.style.transition = '';
+        }, 150);
+      }, 150);
+    }
+    
+    // 置顶功能实现
+    function enableForceTop() {
+      // 清除之前的定时器
+      if (forceTopInterval) {
+        clearInterval(forceTopInterval);
+      }
+      
+      // 立即设置置顶
+      setForceTop();
+      
+      // 每100ms检查一次，确保置顶
+      forceTopInterval = setInterval(() => {
+        setForceTop();
+      }, 100);
+      
+      // 监听页面可见性变化
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      window.addEventListener('focus', handleWindowFocus);
+    }
+    
+    function disableForceTop() {
+      // 清除定时器
+      if (forceTopInterval) {
+        clearInterval(forceTopInterval);
+        forceTopInterval = null;
+      }
+      
+      // 移除事件监听
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleWindowFocus);
+      
+      // 恢复默认z-index
+      chatContainer.style.zIndex = '9999';
+    }
+    
+    function setForceTop() {
+      if (isPinned) {
+        // 使用最大z-index值
+        chatContainer.style.zIndex = '2147483647';
+        chatContainer.style.position = 'fixed';
+        
+        // 确保窗口可见
+        if (chatContainer.style.display === 'none') {
+          chatContainer.style.display = 'block';
+        }
+      }
+    }
+    
+    function handleVisibilityChange() {
+      if (!document.hidden && isPinned) {
+        setForceTop();
+      }
+    }
+    
+    function handleWindowFocus() {
+      if (isPinned) {
+        setForceTop();
+      }
+    }
+    
+    // 切换全屏
+    function toggleFullscreen() {
+      isFullscreen = !isFullscreen;
+      
+      if (isFullscreen) {
+        // 使用Electron API进入全屏
+        if (window.require) {
+          const { ipcRenderer } = window.require('electron');
+          ipcRenderer.send('toggle-fullscreen', true);
+        }
+        fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+        fullscreenBtn.title = '退出全屏';
+      } else {
+        // 使用Electron API退出全屏
+        if (window.require) {
+          const { ipcRenderer } = window.require('electron');
+          ipcRenderer.send('toggle-fullscreen', false);
+        }
+        fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+        fullscreenBtn.title = '全屏';
+      }
+    }
+    
+    // 关闭窗口
+    function closeWindow() {
+      if (window.require) {
+        const { ipcRenderer } = window.require('electron');
+        ipcRenderer.send('close-floating-window');
+      } else {
+        window.close();
+      }
+    }
+    
+    // 发送消息
+    async function sendMessage() {
+      const message = messageInput.value.trim();
+      if (!message) return;
+      
+      // 添加用户消息
+      addMessage(message, false);
+      
+      // 清空输入框
+      messageInput.value = '';
+      
+      // 添加加载状态
+      const loadingId = addLoadingMessage();
+      
+      // 检查是否有agentId
+      if (!agentId) {
+        // 如果没有agentId，使用模拟回复
+        setTimeout(() => {
+          const aiResponse = generateAIResponse(message);
+          
+          // 移除加载状态，添加AI回复
+          removeLoadingMessage(loadingId);
+          addMessage(aiResponse, true);
+        }, 1500);
+        return;
+      }
+      
+      // 发送到后端
+      try {
+        const response = await fetch(`/processAgent/${agentId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ message })
+        });
+        
+        const data = await response.json();
+        
+        // 移除加载状态，添加AI回复
+        removeLoadingMessage(loadingId);
+        if (data.result) {
+          addMessage(data.result, true);
+        } else {
+          addMessage('抱歉，AI 回复出现错误', true);
+        }
+      } catch (error) {
+        console.error('发送消息失败:', error);
+        removeLoadingMessage(loadingId);
+        addMessage('抱歉，请求失败，请稍后重试', true);
+      }
+    }
+    
+    // 模拟AI回复生成
+    function generateAIResponse(query) {
+      const responses = {
+        '如何使用AI助手？': 'AI助手可以帮助您解答各种问题。您可以：\n\n1. 直接输入问题\n2. 使用热门问题快速开始\n3. 查看相关文档和API说明\n\n有什么具体问题需要帮助吗？',
+        '模型调用方法': '模型调用方法包括：\n\n- **API调用**：使用HTTP请求调用模型\n- **SDK集成**：使用官方SDK进行集成\n- **参数配置**：设置温度、最大长度等参数\n\n需要了解具体的调用示例吗？',
+        'API接口说明': 'API接口提供以下功能：\n\n- 文本生成\n- 图像处理\n- 语音识别\n- 数据分析\n\n每个接口都有详细的文档说明和示例代码。',
+        '智能体配置': '智能体配置包括：\n\n1. **基础设置**：名称、描述、模型选择\n2. **能力配置**：工具集成、知识库连接\n3. **行为设置**：回复风格、安全策略\n4. **测试部署**：本地测试、生产部署\n\n需要配置哪个方面的智能体？',
+        '工作流设计': '工作流设计是AI应用的核心，包括：\n\n- **节点连接**：将不同的AI模型和工具连接\n- **数据流转**：确保数据在各节点间正确传递\n- **条件分支**：根据条件执行不同的处理路径\n- **错误处理**：设置异常情况的处理机制',
+        '知识库管理': '知识库管理功能：\n\n- **文档上传**：支持多种格式的文档\n- **智能索引**：自动建立搜索索引\n- **语义搜索**：基于语义的智能检索\n- **版本控制**：管理知识库的版本更新',
+        '应用部署': '应用部署步骤：\n\n1. **环境准备**：配置服务器和依赖\n2. **代码部署**：上传应用代码\n3. **服务配置**：设置端口和域名\n4. **监控运维**：配置日志和监控系统',
+        '错误排查': '常见错误排查方法：\n\n- **日志分析**：查看详细的错误日志\n- **网络检查**：确认网络连接正常\n- **权限验证**：检查API密钥和权限\n- **版本兼容**：确认依赖版本匹配'
+      };
+      
+      return responses[query] || `关于"${query}"的问题，我为您提供以下信息：\n\n这是一个很好的问题！让我为您详细解答...\n\n如果您需要更具体的信息，请告诉我更多细节。`;
+    }
+    
+    // Markdown 渲染
+    function renderMarkdown(content) {
+      if (!content) return '';
+      return marked.parse(content);
+    }
+    
+    // 添加消息
+    function addMessage(content, isAI) {
+      const messageId = Date.now() + Math.random();
+      const message = { id: messageId, content, isAI };
+      messages.push(message);
+      
+      updateUI();
+    }
+    
+    // 添加加载消息
+    function addLoadingMessage() {
+      const loadingId = Date.now() + Math.random();
+      const loadingMessage = { 
+        id: loadingId, 
+        content: '', 
+        isAI: true, 
+        isLoading: true 
+      };
+      messages.push(loadingMessage);
+      
+      updateUI();
+      return loadingId;
+    }
+    
+    // 移除加载消息
+    function removeLoadingMessage(loadingId) {
+      messages = messages.filter(msg => msg.id !== loadingId);
+      updateUI();
+    }
+    
+    // 更新UI
+    function updateUI() {
+      // 显示/隐藏空状态
+      if (messages.length === 0) {
+        emptyState.style.display = 'block';
+        messagesContainer.style.display = 'none';
+      } else {
+        emptyState.style.display = 'none';
+        messagesContainer.style.display = 'flex';
+      }
+      
+      // 渲染消息
+      renderMessages();
+    }
+    
+    // 渲染消息
+    function renderMessages() {
+      messagesContainer.innerHTML = '';
+      
+      messages.forEach(message => {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `electron-floating-message-item ${message.isAI ? 'electron-floating-ai-message' : 'electron-floating-user-message'}`;
+        
+        const bubbleDiv = document.createElement('div');
+        bubbleDiv.className = `electron-floating-message-bubble ${message.isAI ? 'ai-bubble' : 'user-bubble'}`;
+        
+        if (message.isLoading) {
+          bubbleDiv.innerHTML = `
+            <div class="electron-floating-loading-container">
+              <div class="electron-floating-loading-dots">
+                <div class="electron-floating-dot"></div>
+                <div class="electron-floating-dot"></div>
+                <div class="electron-floating-dot"></div>
+              </div>
+              <span class="electron-floating-loading-text">AI 正在思考中...</span>
+            </div>
+          `;
+        } else {
+          const textDiv = document.createElement('div');
+          textDiv.className = 'electron-floating-message-text';
+          textDiv.innerHTML = renderMarkdown(message.content);
+          bubbleDiv.appendChild(textDiv);
+        }
+        
+        messageDiv.appendChild(bubbleDiv);
+        messagesContainer.appendChild(messageDiv);
+      });
+      
+      // 滚动到底部
+      chatContent.scrollTop = chatContent.scrollHeight;
+    }
+    
+    // 启动应用
+    init();
+  </script>
+</body>
+</html>
