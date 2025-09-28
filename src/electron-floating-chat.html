@@ -99,8 +99,8 @@
       font-weight: 700;
       color: #374151;
       font-size: 16px;
-      -webkit-app-region: no-drag;
-      pointer-events: none;
+      -webkit-app-region: drag;
+      pointer-events: auto;
       z-index: 10;
     }
     
@@ -288,6 +288,64 @@
       word-wrap: break-word;
     }
     
+    .electron-floating-message-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #f3f4f6;
+      flex-wrap: wrap;
+    }
+    
+    .electron-floating-stats-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #6b7280;
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .electron-floating-stat-item {
+      font-size: 12px;
+      color: #6b7280;
+    }
+    
+    .electron-floating-stat-separator {
+      font-size: 12px;
+      color: #d1d5db;
+    }
+    
+    .electron-floating-action-buttons {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    
+    .electron-floating-action-btn {
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: transparent;
+      color: #9ca3af;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 12px;
+    }
+    
+    .electron-floating-action-btn:hover {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+    
     .electron-floating-loading-container {
       display: flex;
       align-items: center;
@@ -329,74 +387,299 @@
       font-style: italic;
     }
     
-    .electron-floating-chat-input {
-      padding: 20px 24px 24px 24px;
+    .input-container {
+      padding: 20px;
       background: white;
-      border-top: 1px solid #f3f4f6;
       flex-shrink: 0;
     }
     
-    .input-container {
+    .uploaded-files-floating {
+      position: absolute;
+      bottom: 150px;
+      left: 20px;
+      right: 20px;
+      z-index: 1000;
+      pointer-events: none;
+    }
+    
+    .uploaded-files-floating .file-item {
+      pointer-events: auto;
+      opacity: 0.3;
+      transition: opacity 0.3s ease;
+    }
+    
+    .uploaded-files-floating.file-hovered .file-item {
+      opacity: 1;
+      transition: opacity 0.2s ease;
+    }
+    
+    .file-item {
+      display: inline-block;
+      margin-right: 8px;
+      position: relative;
+    }
+    
+    /* 图片预览样式 */
+    .file-item img {
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      width: 64px;
+      height: 64px;
+      object-fit: cover;
+      transition: transform 0.2s ease;
+    }
+    
+    .file-item:hover img {
+      transform: scale(1.05);
+    }
+    
+    /* 文件卡片样式 */
+    .file-card {
       display: flex;
-      gap: 12px;
       align-items: center;
+      gap: 8px;
+      padding: 12px 12px 12px 8px;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(4px);
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      min-width: 0;
+      max-width: 200px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
     
-    .electron-floating-textarea {
+    .file-icon {
+      flex-shrink: 0;
+      font-size: 18px;
+      color: #6b7280;
+      margin-left: 0px;
+      margin-right: 4px;
+    }
+    
+    .file-info {
       flex: 1;
-      padding: 0 12px;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
+      min-width: 0;
+      max-width: 120px;
+    }
+    
+    .file-name {
+      font-weight: 500;
       font-size: 14px;
-      resize: none;
-      outline: none;
-      transition: all 0.2s ease;
-      font-family: inherit;
-      height: 40px;
-      line-height: 40px;
-      box-sizing: border-box;
-      background: white;
-      color: #374151;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
+      color: #111827;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 140px;
     }
     
-    .electron-floating-textarea::-webkit-scrollbar {
-      display: none;
+    .file-size {
+      font-size: 12px;
+      color: #6b7280;
     }
     
-    .electron-floating-textarea:focus {
-      border-color: #1d4ed8;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-      background: white;
-    }
-    
-    .electron-floating-textarea::placeholder {
-      color: #9ca3af;
-    }
-    
-    .electron-floating-send-btn {
-      width: 40px;
-      height: 40px;
-      background: #1d4ed8;
+    .file-remove-btn {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 16px;
+      height: 16px;
+      background: #4b5563;
       color: white;
-      border: none;
-      border-radius: 8px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: 12px;
       cursor: pointer;
       transition: all 0.2s ease;
-      flex-shrink: 0;
+      opacity: 0;
     }
     
-    .electron-floating-send-btn:hover:not(:disabled) {
+    .file-item:hover .file-remove-btn {
+      opacity: 1;
+    }
+    
+    .file-remove-btn:hover {
+      background: #ef4444;
+    }
+    
+    /* 输入框容器样式 */
+    .input-wrapper {
+      background: white;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      padding: 8px;
+    }
+    
+    .input-textarea {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #374151;
+      font-size: 14px;
+      resize: none;
+      font-family: inherit;
+      line-height: 1.5;
+    }
+    
+    .input-textarea::placeholder {
+      color: #9ca3af;
+    }
+    
+    .input-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 4px;
+    }
+    
+    .input-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .upload-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      color: #9ca3af;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 14px;
+    }
+    
+    .upload-btn:hover {
+      color: #2563eb;
+      background: #eff6ff;
+    }
+    
+    .upload-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .upload-btn:disabled:hover {
+      color: #9ca3af;
+      background: transparent;
+    }
+    
+    .input-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .input-length {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+    
+    .send-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 14px;
+    }
+    
+    .send-btn:hover {
       background: #1d4ed8;
     }
     
-    .electron-floating-send-btn:disabled {
-      background: #d1d5db;
+    .send-btn:disabled {
+      opacity: 0.5;
       cursor: not-allowed;
+    }
+    
+    .cancel-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: #dc2626;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 14px;
+    }
+    
+    .cancel-btn:hover {
+      background: #b91c1c;
+    }
+    
+    /* 隐藏 textarea 的滚动条 */
+    textarea {
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE and Edge */
+    }
+    
+    textarea::-webkit-scrollbar {
+      display: none; /* Chrome, Safari, Opera */
+    }
+    
+    /* 确保flex布局正常工作 */
+    .input-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .input-actions {
+      display: flex;
+      align-items: center;
+    }
+    
+    .input-info {
+      display: flex;
+      align-items: center;
+    }
+    
+    /* 文件列表容器 */
+    .files-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    /* 确保按钮图标居中 */
+    .upload-btn i,
+    .send-btn i,
+    .cancel-btn i {
+      font-size: 14px;
+    }
+    
+    /* 文件卡片布局 */
+    .file-card {
+      display: flex;
+      align-items: center;
+    }
+    
+    /* 确保删除按钮在正确位置 */
+    .file-item {
+      position: relative;
+    }
+    
+    .file-item .file-remove-btn {
+      position: absolute;
+      top: -4px;
+      right: -4px;
     }
     
     /* Markdown 样式 */
@@ -534,21 +817,63 @@
         </div>
       </div>
 
-      <!-- 输入框 -->
-      <div class="electron-floating-chat-input">
-        <div class="input-container">
+      <!-- 已上传文件展示区域 - 悬浮显示 -->
+      <div id="uploadedFiles" class="uploaded-files-floating" style="display: none;">
+        <div class="flex flex-wrap gap-2">
+          <div id="filesList" class="files-list"></div>
+        </div>
+      </div>
+
+      <!-- 输入框部分 -->
+      <div class="input-container">
+        <div class="input-wrapper">
           <textarea
             id="messageInput"
-            class="electron-floating-textarea"
-            placeholder="输入您的问题..."
-            rows="2"
+            class="input-textarea"
+            placeholder="请输入内容..."
+            rows="3"
           ></textarea>
-          <button 
-            id="sendBtn"
-            class="electron-floating-send-btn"
-          >
-            <i class="fas fa-paper-plane"></i>
-          </button>
+          
+          <!-- 底部操作栏 -->
+          <div class="input-footer">
+            <!-- 左侧按钮 -->
+            <div class="input-actions">
+              <button
+                id="imageUploadBtn"
+                class="upload-btn"
+                title="上传图片"
+              >
+                <i class="fas fa-image"></i>
+              </button>
+              <button
+                id="fileUploadBtn"
+                class="upload-btn"
+                title="上传文件"
+              >
+                <i class="fas fa-file"></i>
+              </button>
+            </div>
+            
+            <!-- 右侧信息 -->
+            <div class="input-info">
+              <span id="inputLength" class="input-length">0/129024</span>
+              <button
+                id="sendBtn"
+                class="send-btn"
+                title="发送消息"
+              >
+                <i class="fas fa-arrow-up"></i>
+              </button>
+              <button
+                id="cancelBtn"
+                class="cancel-btn"
+                title="取消发送"
+                style="display: none;"
+              >
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -560,6 +885,16 @@
     const agentId = urlParams.get('agentId') || null;
     const agentName = urlParams.get('agentName') || 'AI助手';
     
+    // 智能体配置信息
+    let agentConfig = {
+      agent_name: agentName,
+      agent_state: "1",
+      agent_id: agentId,
+      llm_api: "",
+      llm_prompt: "",
+      llm_image: "n"
+    };
+    
     // 状态管理
     let messages = [];
     let isPinned = false;
@@ -568,6 +903,11 @@
     let dragStart = { x: 0, y: 0 };
     let position = { x: 100, y: 100 };
     let forceTopInterval = null;
+    let uploadedFilesList = [];
+    let isSending = false;
+    let currentRequest = null;
+    let fileHoverTimeout = null;
+    let isFileHovered = false;
     
     // DOM元素
     const chatContainer = document.getElementById('chatContainer');
@@ -582,6 +922,12 @@
     const emptyState = document.getElementById('emptyState');
     const messagesContainer = document.getElementById('messagesContainer');
     const agentNameElement = document.getElementById('agentName');
+    const imageUploadBtn = document.getElementById('imageUploadBtn');
+    const fileUploadBtn = document.getElementById('fileUploadBtn');
+    const uploadedFiles = document.getElementById('uploadedFiles');
+    const filesList = document.getElementById('filesList');
+    const inputLength = document.getElementById('inputLength');
+    const cancelBtn = document.getElementById('cancelBtn');
     
     // 设置智能体名称
     if (agentNameElement) {
@@ -589,11 +935,288 @@
       console.log('设置智能体名称:', agentName);
     }
     
+    // 获取智能体配置信息
+    async function loadAgentConfig() {
+      if (!agentId) return;
+      
+      try {
+        // 第一步：根据agent_id获取智能体配置
+        const response = await fetch(`http://localhost:5000/selectAgentById/${agentId}`);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('✅ 第一步：获取智能体配置成功:', data);
+          
+          // 构建智能体配置
+          agentConfig = {
+            agent_name: data.agent_name || agentName,
+            agent_state: data.agent_state || "1",
+            agent_id: agentId,
+            llm_api: data.llm_api || "",
+            llm_prompt: data.llm_prompt || "",
+            llm_image: data.llm_image || "y",
+            llm_file: data.llm_file || "y",
+            llm_internet: data.llm_internet || "y",
+            llm_memory: data.llm_memory || "y",
+            llm_knowledge: data.llm_knowledge || "",
+            llm_maximum_length_of_reply: data.llm_maximum_length_of_reply || "2048",
+            llm_carry_number_of_rounds_of_context: data.llm_carry_number_of_rounds_of_context || "30",
+            llm_temperature_coefficient: data.llm_temperature_coefficient || "0.6"
+          };
+          console.log('✅ 智能体配置已构建:', agentConfig);
+          
+          // 根据配置更新上传按钮显隐
+          updateUploadButtonsVisibility();
+        } else {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+      } catch (error) {
+        console.error('❌ 第一步：加载智能体配置失败:', error);
+        // 使用默认配置
+        agentConfig = {
+          agent_name: agentName,
+          agent_state: "1",
+          agent_id: agentId,
+          llm_api: "qwen-max",
+          llm_prompt: "默认模板",
+          llm_image: "y",
+          llm_file: "y",
+          llm_internet: "y",
+          llm_memory: "y",
+          llm_knowledge: "",
+          llm_maximum_length_of_reply: "2048",
+          llm_carry_number_of_rounds_of_context: "30",
+          llm_temperature_coefficient: "0.6"
+        };
+        
+        // 根据默认配置更新上传按钮显隐
+        updateUploadButtonsVisibility();
+      }
+    }
+    
     // 初始化
-    function init() {
+    async function init() {
       setupEventListeners();
       updateUI();
       setupElectronListeners();
+      await loadAgentConfig();
+      
+      // 确保初始状态不置顶
+      if (window.require) {
+        const { ipcRenderer } = window.require('electron');
+        ipcRenderer.send('set-always-on-top', false);
+        console.log('初始化：设置窗口不置顶');
+      }
+    }
+    
+    // 文件上传功能
+    function openImageUpload() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = handleImageSelect;
+      input.click();
+    }
+    
+    function openFileUpload() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.onchange = handleFileSelect;
+      input.click();
+    }
+    
+    function handleImageSelect(e) {
+      const file = e.target.files[0];
+      if (file) {
+        addUploadedFile(file, 'image');
+      }
+    }
+    
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) {
+        addUploadedFile(file, 'file');
+      }
+    }
+    
+    function addUploadedFile(file, type) {
+      const fileObj = {
+        id: Date.now(),
+        name: file.name,
+        size: file.size,
+        type: type,
+        file: file,
+        preview: null
+      };
+      
+      // 如果是图片，生成预览
+      if (type === 'image') {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          fileObj.preview = e.target.result;
+          updateUploadedFilesDisplay();
+        };
+        reader.readAsDataURL(file);
+      }
+      
+      uploadedFilesList.push(fileObj);
+      updateUploadedFilesDisplay();
+    }
+    
+    function removeUploadedFile(fileId) {
+      uploadedFilesList = uploadedFilesList.filter(f => f.id !== fileId);
+      updateUploadedFilesDisplay();
+    }
+    
+    function clearAllFiles() {
+      uploadedFilesList = [];
+      updateUploadedFilesDisplay();
+    }
+    
+    function updateUploadedFilesDisplay() {
+      if (uploadedFilesList.length === 0) {
+        uploadedFiles.style.display = 'none';
+        return;
+      }
+      
+      uploadedFiles.style.display = 'block';
+      filesList.innerHTML = '';
+      
+      // 添加悬停事件监听器
+      uploadedFiles.addEventListener('mouseenter', handleFileMouseEnter);
+      uploadedFiles.addEventListener('mouseleave', handleFileMouseLeave);
+      
+      uploadedFilesList.forEach(file => {
+        const fileItem = document.createElement('div');
+        fileItem.className = 'file-item';
+        
+        if (file.type === 'image') {
+          // 图片文件直接展示
+          fileItem.innerHTML = `
+            <img 
+              src="${file.preview || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yMCAyMEg0NFY0NEgyMFYyMFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+'}" 
+              alt="preview"
+            />
+            <button 
+              onclick="removeUploadedFile(${file.id})" 
+              class="file-remove-btn"
+            >
+              ×
+            </button>
+          `;
+        } else {
+          // 非图片文件显示卡片
+          fileItem.innerHTML = `
+            <div class="file-card">
+              <div class="file-icon">
+                <i class="fas fa-file"></i>
+              </div>
+              <div class="file-info">
+                <div class="file-name">${file.name}</div>
+                <div class="file-size">${formatFileSize(file.size)}</div>
+              </div>
+              <button 
+                onclick="removeUploadedFile(${file.id})" 
+                class="file-remove-btn"
+              >
+                ×
+              </button>
+            </div>
+          `;
+        }
+        
+        filesList.appendChild(fileItem);
+      });
+    }
+    
+    // 格式化文件大小
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    // 文件悬停处理
+    function handleFileMouseEnter() {
+      // 清除之前的定时器
+      if (fileHoverTimeout) {
+        clearTimeout(fileHoverTimeout);
+        fileHoverTimeout = null;
+      }
+      isFileHovered = true;
+      uploadedFiles.classList.add('file-hovered');
+    }
+    
+    function handleFileMouseLeave() {
+      // 设置延迟1秒后透明化
+      fileHoverTimeout = setTimeout(() => {
+        isFileHovered = false;
+        uploadedFiles.classList.remove('file-hovered');
+      }, 1000);
+    }
+    
+    // 更新输入长度
+    function updateInputLength() {
+      const length = messageInput.value.length;
+      inputLength.textContent = `${length}/129024`;
+    }
+    
+    // 取消发送
+    function cancelSend() {
+      if (currentRequest) {
+        currentRequest.abort();
+        currentRequest = null;
+      }
+      
+      // 立即移除所有加载状态的消息
+      messages = messages.filter(message => !message.isLoading);
+      
+      // 重置发送状态
+      isSending = false;
+      sendBtn.style.display = 'flex';
+      cancelBtn.style.display = 'none';
+      sendBtn.innerHTML = '<i class="fas fa-arrow-up"></i>';
+      sendBtn.title = '发送消息';
+      
+      // 更新UI
+      updateUI();
+      
+      console.log('✅ 用户取消了发送请求');
+    }
+    
+    // 根据agent配置控制上传按钮显隐
+    function updateUploadButtonsVisibility() {
+      if (!agentConfig) return;
+      
+      // 根据llm_image配置控制图片上传按钮
+      if (agentConfig.llm_image === 'y' || agentConfig.llm_image === 'Y') {
+        imageUploadBtn.style.display = 'flex';
+        imageUploadBtn.disabled = false;
+        imageUploadBtn.classList.remove('disabled');
+      } else {
+        imageUploadBtn.style.display = 'flex';
+        imageUploadBtn.disabled = true;
+        imageUploadBtn.classList.add('disabled');
+      }
+      
+      // 根据llm_file配置控制文件上传按钮
+      if (agentConfig.llm_file === 'y' || agentConfig.llm_file === 'Y') {
+        fileUploadBtn.style.display = 'flex';
+        fileUploadBtn.disabled = false;
+        fileUploadBtn.classList.remove('disabled');
+      } else {
+        fileUploadBtn.style.display = 'flex';
+        fileUploadBtn.disabled = true;
+        fileUploadBtn.classList.add('disabled');
+      }
+      
+      console.log('📁 上传按钮显隐控制:', {
+        llm_image: agentConfig.llm_image,
+        llm_file: agentConfig.llm_file,
+        imageBtnEnabled: !imageUploadBtn.disabled,
+        fileBtnEnabled: !fileUploadBtn.disabled
+      });
     }
     
     // 设置Electron事件监听
@@ -623,6 +1246,12 @@
     
     // 设置事件监听器
     function setupEventListeners() {
+      // 防止重复绑定事件监听器
+      if (window.eventListenersSetup) {
+        return;
+      }
+      window.eventListenersSetup = true;
+      
       // 置顶按钮
       pinBtn.addEventListener('click', togglePin);
       
@@ -635,6 +1264,11 @@
       // 发送按钮
       sendBtn.addEventListener('click', sendMessage);
       
+      // 文件上传按钮
+      imageUploadBtn.addEventListener('click', openImageUpload);
+      fileUploadBtn.addEventListener('click', openFileUpload);
+      
+      
       // 拖拽功能由CSS的-webkit-app-region处理
       
       // 输入框事件
@@ -644,6 +1278,16 @@
           sendMessage();
         }
       });
+      
+      // 输入长度监听
+      messageInput.addEventListener('input', updateInputLength);
+      
+      // 取消按钮
+      cancelBtn.addEventListener('click', cancelSend);
+      
+      // 初始化输入长度
+      updateInputLength();
+      
       
       // 热门问题点击
       document.querySelectorAll('.hot-tag').forEach(tag => {
@@ -840,50 +1484,77 @@
     
     // 发送消息
     async function sendMessage() {
+      console.log('🔍 sendMessage 被调用，当前状态:', { isSending, message: messageInput.value.trim() });
+      
       const message = messageInput.value.trim();
-      if (!message) return;
+      if (!message && uploadedFilesList.length === 0) return;
+      
+      if (isSending) {
+        console.log('⚠️ 正在发送中，忽略重复调用');
+        return;
+      }
+      isSending = true;
+      
+      // 更新发送按钮状态
+      sendBtn.style.display = 'none';
+      cancelBtn.style.display = 'flex';
       
       // 添加用户消息
-      addMessage(message, false);
+      if (message) {
+        addMessage(message, false);
+      }
       
-      // 清空输入框
+      // 清空输入框和文件
       messageInput.value = '';
+      clearAllFiles();
+      
+      // 清空字数统计
+      updateInputLength();
       
       // 添加加载状态
       const loadingId = addLoadingMessage();
       
       // 检查是否有agentId
       if (!agentId) {
-        // 如果没有agentId，使用模拟回复
-        setTimeout(() => {
-          const aiResponse = generateAIResponse(message);
-          
-          // 移除加载状态，添加AI回复
-          removeLoadingMessage(loadingId);
-          addMessage(aiResponse, true);
-        }, 1500);
+        console.error('agentId 不存在');
+        // 移除加载状态
+        removeLoadingMessage(loadingId);
+        // 重置发送状态
+        isSending = false;
+        sendBtn.style.display = 'flex';
+        cancelBtn.style.display = 'none';
+        sendBtn.innerHTML = '<i class="fas fa-arrow-up"></i>';
+        sendBtn.title = '发送消息';
         return;
       }
       
-      // 发送到后端
+      // 第二步：使用获取的配置发送消息
       try {
-        // 构造请求体，包含智能体配置信息
+        // 确保智能体配置已加载
+        if (!agentConfig.llm_api) {
+          console.log('⚠️ 智能体配置未完全加载，重新加载...');
+          await loadAgentConfig();
+        }
+        
+        // 构造请求体，使用完整的智能体配置信息
         const payload = {
-          agent_name: agentName,
-          agent_state: "1",
-          agent_id: agentId,
-          llm_api: "", // 这里需要从智能体配置中获取
-          llm_prompt: "", // 这里需要从智能体配置中获取
-          llm_image: "n",
+          ...agentConfig,
           message: message
         };
         
-        const response = await fetch(`/api/processAgent/${agentId}`, {
+        console.log('✅ 第二步：发送消息请求体:', payload);
+        
+        // 创建AbortController用于取消请求
+        const abortController = new AbortController();
+        currentRequest = abortController;
+        
+        const response = await fetch(`http://localhost:5000/processAgent/${agentId}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
+          signal: abortController.signal
         });
         
         if (!response.ok) {
@@ -891,38 +1562,40 @@
         }
         
         const data = await response.json();
-        console.log('✅ API响应:', data);
+        console.log('✅ 第二步：API响应成功:', data);
         
-        // 移除加载状态，添加AI回复
+        // 移除加载状态
         removeLoadingMessage(loadingId);
+        
+        // 添加AI回复
         if (data && data.result) {
-          addMessage(data.result, true);
+          addMessage(data.result, true, data.stats);
+          console.log('✅ 消息已添加到聊天列表');
         } else {
           addMessage('抱歉，AI回复出现错误', true);
         }
         
       } catch (error) {
-        console.error('❌ 发送消息失败:', error);
+        // 如果是用户主动取消，不显示错误信息，直接返回
+        if (error.name === 'AbortError') {
+          console.log('✅ 用户取消了发送请求');
+          return;
+        }
+        
+        console.error('❌ 第二步：发送消息失败:', error);
         removeLoadingMessage(loadingId);
         addMessage('抱歉，请求失败，请稍后重试', true);
+      } finally {
+        // 重置发送状态（无论是否取消都要重置）
+        isSending = false;
+        sendBtn.style.display = 'flex';
+        cancelBtn.style.display = 'none';
+        sendBtn.innerHTML = '<i class="fas fa-arrow-up"></i>';
+        sendBtn.title = '发送消息';
+        currentRequest = null;
       }
     }
     
-    // 模拟AI回复生成
-    function generateAIResponse(query) {
-      const responses = {
-        '如何使用AI助手？': 'AI助手可以帮助您解答各种问题。您可以：\n\n1. 直接输入问题\n2. 使用热门问题快速开始\n3. 查看相关文档和API说明\n\n有什么具体问题需要帮助吗？',
-        '模型调用方法': '模型调用方法包括：\n\n- **API调用**：使用HTTP请求调用模型\n- **SDK集成**：使用官方SDK进行集成\n- **参数配置**：设置温度、最大长度等参数\n\n需要了解具体的调用示例吗？',
-        'API接口说明': 'API接口提供以下功能：\n\n- 文本生成\n- 图像处理\n- 语音识别\n- 数据分析\n\n每个接口都有详细的文档说明和示例代码。',
-        '智能体配置': '智能体配置包括：\n\n1. **基础设置**：名称、描述、模型选择\n2. **能力配置**：工具集成、知识库连接\n3. **行为设置**：回复风格、安全策略\n4. **测试部署**：本地测试、生产部署\n\n需要配置哪个方面的智能体？',
-        '工作流设计': '工作流设计是AI应用的核心，包括：\n\n- **节点连接**：将不同的AI模型和工具连接\n- **数据流转**：确保数据在各节点间正确传递\n- **条件分支**：根据条件执行不同的处理路径\n- **错误处理**：设置异常情况的处理机制',
-        '知识库管理': '知识库管理功能：\n\n- **文档上传**：支持多种格式的文档\n- **智能索引**：自动建立搜索索引\n- **语义搜索**：基于语义的智能检索\n- **版本控制**：管理知识库的版本更新',
-        '应用部署': '应用部署步骤：\n\n1. **环境准备**：配置服务器和依赖\n2. **代码部署**：上传应用代码\n3. **服务配置**：设置端口和域名\n4. **监控运维**：配置日志和监控系统',
-        '错误排查': '常见错误排查方法：\n\n- **日志分析**：查看详细的错误日志\n- **网络检查**：确认网络连接正常\n- **权限验证**：检查API密钥和权限\n- **版本兼容**：确认依赖版本匹配'
-      };
-      
-      return responses[query] || `关于"${query}"的问题，我为您提供以下信息：\n\n这是一个很好的问题！让我为您详细解答...\n\n如果您需要更具体的信息，请告诉我更多细节。`;
-    }
     
     // Markdown 渲染
     function renderMarkdown(content) {
@@ -931,9 +1604,10 @@
     }
     
     // 添加消息
-    function addMessage(content, isAI) {
+    function addMessage(content, isAI, stats = null) {
+      console.log('📝 添加消息:', { content: content.substring(0, 50) + '...', isAI, messageCount: messages.length });
       const messageId = Date.now() + Math.random();
-      const message = { id: messageId, content, isAI };
+      const message = { id: messageId, content, isAI, stats };
       messages.push(message);
       
       updateUI();
@@ -962,6 +1636,10 @@
     
     // 更新UI
     function updateUI() {
+      // 设置置顶按钮初始状态
+      pinBtn.classList.remove('pinned');
+      pinBtn.title = '置顶窗口';
+      
       // 显示/隐藏空状态
       if (messages.length === 0) {
         emptyState.style.display = 'block';
@@ -1002,6 +1680,55 @@
           textDiv.className = 'electron-floating-message-text';
           textDiv.innerHTML = renderMarkdown(message.content);
           bubbleDiv.appendChild(textDiv);
+          
+          // 如果是AI消息，添加统计信息和操作按钮
+          if (message.isAI) {
+            const footerDiv = document.createElement('div');
+            footerDiv.className = 'electron-floating-message-footer';
+            
+            // 统计信息
+            const statsInfo = document.createElement('div');
+            statsInfo.className = 'electron-floating-stats-info';
+            statsInfo.innerHTML = `
+              <span class="electron-floating-stat-item">字数: ${message.content.length}</span>
+              <span class="electron-floating-stat-separator">|</span>
+              <span class="electron-floating-stat-item">输入token: ${message.stats ? message.stats.input_tokens || 0 : 0}</span>
+              <span class="electron-floating-stat-separator">|</span>
+              <span class="electron-floating-stat-item">输出token: ${message.stats ? message.stats.output_tokens || 0 : 0}</span>
+            `;
+            
+            // 操作按钮
+            const actionButtons = document.createElement('div');
+            actionButtons.className = 'electron-floating-action-buttons';
+            
+            // 构建按钮HTML
+            let buttonsHTML = `
+              <button class="electron-floating-action-btn" title="复制" onclick="copyMessage(${message.id})">
+                <i class="fas fa-copy"></i>
+              </button>
+            `;
+            
+            // 只有最新的AI消息才显示重新生成按钮
+            if (isLatestAIMessage(message)) {
+              buttonsHTML += `
+                <button class="electron-floating-action-btn" title="重新生成" onclick="retryMessage(${JSON.stringify(message).replace(/"/g, '&quot;')})">
+                  <i class="fas fa-redo"></i>
+                </button>
+              `;
+            }
+            
+            buttonsHTML += `
+              <button class="electron-floating-action-btn" title="获取智能体ID" onclick="showAgentId()">
+                <i class="fas fa-id-card"></i>
+              </button>
+            `;
+            
+            actionButtons.innerHTML = buttonsHTML;
+            
+            footerDiv.appendChild(statsInfo);
+            footerDiv.appendChild(actionButtons);
+            bubbleDiv.appendChild(footerDiv);
+          }
         }
         
         messageDiv.appendChild(bubbleDiv);
@@ -1012,8 +1739,153 @@
       chatContent.scrollTop = chatContent.scrollHeight;
     }
     
+    // 复制消息
+    function copyMessage(messageId) {
+      const message = messages.find(m => m.id === messageId);
+      if (message) {
+        navigator.clipboard.writeText(message.content).then(() => {
+          console.log('消息已复制到剪贴板');
+          // 可以添加一个提示
+        }).catch(err => {
+          console.error('复制失败:', err);
+        });
+      }
+    }
+    
+    // 判断是否为最新的AI消息
+    function isLatestAIMessage(message) {
+      // 如果不是 AI 消息，直接返回 false
+      if (!message.isAI) return false;
+
+      // 获取所有 AI 消息，并按 id 排序（id 是时间戳）
+      const aiMessages = messages.filter(m => m.isAI);
+      
+      // 找到最后一条 AI 消息
+      const latestAIMessage = aiMessages.length > 0 ? aiMessages[aiMessages.length - 1] : null;
+
+      // 判断当前消息是否为最新的一条 AI 消息
+      return message.id === latestAIMessage?.id;
+    }
+    
+    // 重新生成消息
+    async function retryMessage(message) {
+      if (!agentId) {
+        console.error('agentId 不存在');
+        return;
+      }
+
+      // 找到当前 AI 消息的索引
+      const aiIndex = messages.findIndex(m => m.id === message.id);
+      if (aiIndex === -1) return;
+
+      // 立即撤销当前AI回复，替换为加载状态
+      const loadingMessageId = Date.now() + Math.random();
+      messages[aiIndex] = {
+        id: loadingMessageId,
+        content: '',
+        isAI: true,
+        isLoading: true
+      };
+      updateUI();
+
+      // 找到对应的用户消息
+      const userMessage = messages[aiIndex - 1];
+      if (!userMessage || userMessage.isAI) {
+        console.error('找不到对应的用户消息');
+        return;
+      }
+
+      // 取消当前请求（如果有的话）
+      if (currentRequest) {
+        currentRequest.abort();
+      }
+
+      // 创建新的请求控制器
+      const abortController = new AbortController();
+      currentRequest = abortController;
+
+      try {
+        // 确保智能体配置已加载
+        if (!agentConfig.llm_api) {
+          console.log('⚠️ 智能体配置未完全加载，重新加载...');
+          await loadAgentConfig();
+        }
+
+        // 构造请求体
+        const payload = {
+          ...agentConfig,
+          message: userMessage.content
+        };
+
+        console.log('✅ 重新生成请求体:', payload);
+
+        const response = await fetch(`http://localhost:5000/processAgent/${agentId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+          signal: abortController.signal
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ 重新生成请求成功:', data);
+
+
+        // 替换加载消息为新的AI回复
+        if (data && data.result) {
+          messages[aiIndex] = {
+            id: loadingMessageId,
+            content: data.result,
+            isAI: true,
+            stats: data.stats
+          };
+        } else {
+          console.warn('返回数据中缺少 result 字段');
+          messages[aiIndex] = {
+            id: loadingMessageId,
+            content: '抱歉，重新生成失败，请稍后重试',
+            isAI: true
+          };
+        }
+      } catch (error) {
+        // 如果是用户主动取消，不显示错误信息
+        if (error.name === 'AbortError') {
+          console.log('用户取消了重新生成请求');
+          return;
+        }
+        
+        console.error('❌ 重新生成失败:', error);
+        
+        // 替换加载消息为错误信息
+        messages[aiIndex] = {
+          id: loadingMessageId,
+          content: '抱歉，重新生成失败，请稍后重试',
+          isAI: true
+        };
+      } finally {
+        // 重置请求状态
+        currentRequest = null;
+        updateUI();
+      }
+    }
+    
+    // 显示智能体ID
+    function showAgentId() {
+      if (agentId) {
+        alert(`智能体ID: ${agentId}`);
+      } else {
+        alert('当前没有智能体ID');
+      }
+    }
+    
     // 启动应用
     init();
   </script>
 </body>
 </html>
+

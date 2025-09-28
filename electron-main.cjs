@@ -1,6 +1,15 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 
+// 安全的控制台输出函数，处理中文字符
+function safeLog(message, ...args) {
+  try {
+    console.log(message, ...args);
+  } catch (error) {
+    console.log('Log output error:', error.message);
+  }
+}
+
 // 开发环境URL
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 const devUrl = 'http://localhost:5174';
@@ -32,7 +41,7 @@ function createMainWindow() {
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
-    console.log('✅ 主窗口已显示');
+    console.log('✅ Main window displayed');
   });
 
   return mainWindow;
@@ -42,7 +51,7 @@ function createMainWindow() {
 function createFloatingWindow(options) {
   const { agentId, agentName, width = 500, height = 900, minWidth = 400, minHeight = 600 } = options;
   
-  console.log(`🪟 创建浮动窗口: ${agentName} (${agentId})`);
+  safeLog(`Creating floating window: Agent ID ${agentId}`);
   
   // 检查是否已存在该agent的窗口
   if (floatingWindows.has(agentId)) {
@@ -95,13 +104,15 @@ function createFloatingWindow(options) {
   floatingWindow.once('ready-to-show', () => {
     floatingWindow.show();
     floatingWindow.focus();
-    console.log(`✅ 浮动窗口已显示: ${agentName}`);
+    // 确保窗口初始时不置顶
+    floatingWindow.setAlwaysOnTop(false);
+    safeLog(`✅ Floating window displayed for Agent ID ${agentId}`);
   });
 
   // 窗口关闭时清理
   floatingWindow.on('closed', () => {
     floatingWindows.delete(agentId);
-    console.log(`🗑️ 浮动窗口已关闭: ${agentName}`);
+    safeLog(`🗑️ Floating window closed for Agent ID ${agentId}`);
   });
 
   // 存储窗口引用
@@ -135,32 +146,32 @@ function closeAllFloatingWindows() {
 // IPC事件处理
 ipcMain.handle('create-floating-window', async (event, options) => {
   try {
-    console.log('📨 收到创建浮动窗口请求:', options);
+    safeLog('📨 Received create floating window request for Agent ID:', options.agentId);
     const windowId = createFloatingWindow(options);
     return windowId;
   } catch (error) {
-    console.error('❌ 创建浮动窗口失败:', error);
+    console.error('❌ Failed to create floating window:', error);
     return null;
   }
 });
 
 ipcMain.handle('close-floating-window', async (event, windowId) => {
   try {
-    console.log('📨 收到关闭浮动窗口请求:', windowId);
+    console.log('📨 Received close floating window request:', windowId);
     return closeFloatingWindow(windowId);
   } catch (error) {
-    console.error('❌ 关闭浮动窗口失败:', error);
+    console.error('❌ Failed to close floating window:', error);
     return false;
   }
 });
 
 ipcMain.handle('close-all-floating-windows', async (event) => {
   try {
-    console.log('📨 收到关闭所有浮动窗口请求');
+    console.log('📨 Received close all floating windows request');
     closeAllFloatingWindows();
     return true;
   } catch (error) {
-    console.error('❌ 关闭所有浮动窗口失败:', error);
+    console.error('❌ Failed to close all floating windows:', error);
     return false;
   }
 });
@@ -185,7 +196,7 @@ ipcMain.on('set-always-on-top', (event, alwaysOnTop) => {
 ipcMain.on('toggle-fullscreen', (event, isFullscreen) => {
   const window = BrowserWindow.fromWebContents(event.sender);
   if (window) {
-    console.log(`收到全屏请求: ${isFullscreen}`);
+    console.log(`Received fullscreen request: ${isFullscreen}`);
     try {
       if (isFullscreen) {
         // 全屏时确保窗口位置正确
@@ -208,7 +219,7 @@ ipcMain.on('toggle-fullscreen', (event, isFullscreen) => {
         
         // 然后设置全屏
         window.setFullScreen(true);
-        console.log(`已设置全屏模式: ${isFullscreen}, 位置: ${marginX},${marginY}, 大小: ${windowWidth}x${windowHeight}`);
+        console.log(`Fullscreen mode set: ${isFullscreen}, position: ${marginX},${marginY}, size: ${windowWidth}x${windowHeight}`);
       } else {
         // 退出全屏时恢复原始大小
         window.setFullScreen(false);
@@ -218,7 +229,7 @@ ipcMain.on('toggle-fullscreen', (event, isFullscreen) => {
           width: 420,  // 400 + 20边框
           height: 870  // 850 + 20边框
         });
-        console.log(`已退出全屏模式`);
+        console.log(`Exited fullscreen mode`);
       }
       
       // 通知渲染进程全屏状态变化
@@ -234,7 +245,7 @@ ipcMain.on('toggle-fullscreen', (event, isFullscreen) => {
 
 // 应用准备就绪
 app.whenReady().then(() => {
-  console.log('🚀 Electron应用已准备就绪');
+  console.log('🚀 Electron application ready');
   createMainWindow();
 });
 
@@ -254,11 +265,11 @@ app.on('activate', () => {
 
 // 错误处理
 app.on('render-process-gone', (event, webContents, details) => {
-  console.error('❌ 渲染进程崩溃:', details);
+  console.error('❌ Render process crashed:', details);
 });
 
 app.on('child-process-gone', (event, details) => {
-  console.error('❌ 子进程崩溃:', details);
+  console.error('❌ Child process crashed:', details);
 });
 
-console.log('📝 Electron主进程已加载');
+console.log('📝 Electron main process loaded');

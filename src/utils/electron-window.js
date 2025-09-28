@@ -28,7 +28,7 @@ class ElectronWindowManager {
         height: 650,
         minWidth: 350,
         minHeight: 500,
-        alwaysOnTop: true,
+        alwaysOnTop: false,
         resizable: true,
         frame: false,
         transparent: false,
