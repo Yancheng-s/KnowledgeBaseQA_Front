@@ -88,6 +88,20 @@
       background: #f8fafc;
       border-bottom: 1px solid #e5e7eb;
       -webkit-app-region: drag;
+      position: relative;
+    }
+    
+    .agent-name {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: 700;
+      color: #374151;
+      font-size: 16px;
+      -webkit-app-region: no-drag;
+      pointer-events: none;
+      z-index: 10;
     }
     
     .pin-btn {
@@ -481,6 +495,7 @@
             <circle cx="12" cy="20" r="2"/>
           </svg>
         </button>
+        <div class="agent-name" id="agentName">AI助手</div>
         <div class="electron-floating-chat-actions">
           <button class="action-btn" id="fullscreenBtn" title="全屏">
             <i class="fas fa-expand"></i>
@@ -566,6 +581,13 @@
     const chatContent = document.getElementById('chatContent');
     const emptyState = document.getElementById('emptyState');
     const messagesContainer = document.getElementById('messagesContainer');
+    const agentNameElement = document.getElementById('agentName');
+    
+    // 设置智能体名称
+    if (agentNameElement) {
+      agentNameElement.textContent = agentName;
+      console.log('设置智能体名称:', agentName);
+    }
     
     // 初始化
     function init() {
@@ -845,25 +867,42 @@
       
       // 发送到后端
       try {
-        const response = await fetch(`/processAgent/${agentId}`, {
+        // 构造请求体，包含智能体配置信息
+        const payload = {
+          agent_name: agentName,
+          agent_state: "1",
+          agent_id: agentId,
+          llm_api: "", // 这里需要从智能体配置中获取
+          llm_prompt: "", // 这里需要从智能体配置中获取
+          llm_image: "n",
+          message: message
+        };
+        
+        const response = await fetch(`/api/processAgent/${agentId}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ message })
+          body: JSON.stringify(payload)
         });
         
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
+        console.log('✅ API响应:', data);
         
         // 移除加载状态，添加AI回复
         removeLoadingMessage(loadingId);
-        if (data.result) {
+        if (data && data.result) {
           addMessage(data.result, true);
         } else {
-          addMessage('抱歉，AI 回复出现错误', true);
+          addMessage('抱歉，AI回复出现错误', true);
         }
+        
       } catch (error) {
-        console.error('发送消息失败:', error);
+        console.error('❌ 发送消息失败:', error);
         removeLoadingMessage(loadingId);
         addMessage('抱歉，请求失败，请稍后重试', true);
       }
