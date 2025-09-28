@@ -1,7 +1,7 @@
 <!-- 代码已包含 CSS：使用 TailwindCSS , 安装 TailwindCSS 后方可看到布局样式效果 -->
 
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="h-screen bg-gray-50 flex flex-col">
     <!-- 顶部导航 -->
     <nav class="bg-white shadow-sm">
       <div class="max-w-7xl px-4 h-16 flex items-center">
@@ -14,7 +14,7 @@
     </nav>
 
     <!-- 操作区 -->
-    <div class="w-full px-4 py-6">
+    <div class="w-full px-4 py-6 flex-1 flex flex-col overflow-hidden">
       <div class="flex justify-between items-center mb-6">
         <div class="flex space-x-4">
           <button @click="showNewFolderModal = true" class="!rounded-button flex items-center px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50">
@@ -76,45 +76,47 @@
       </div>
 
       <!-- 文件表格 -->
-      <div class="bg-white rounded-lg border border-gray-200">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead>
-            <tr>
-              <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                文件名
-              </th>
-              <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                大小
-              </th>
-              <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                上传时间
-              </th>
-              <th class="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                操作
-              </th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="file in files" :key="file.id">
-              <td class="px-6 py-4">
+      <div class="bg-white rounded-lg border border-gray-200 flex-1 flex flex-col shadow-sm">
+        <!-- 表格头部 - 固定不滚动 -->
+        <div class="bg-gray-50 px-6 py-3 border-b border-gray-200">
+          <div class="grid grid-cols-4 gap-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <div class="text-left">文件名</div>
+            <div class="text-left">大小</div>
+            <div class="text-left">上传时间</div>
+            <div class="text-right">操作</div>
+          </div>
+        </div>
+        
+        <!-- 表格内容 - 可滚动区域 -->
+        <div class="overflow-y-auto flex-1 bg-white" :style="{ maxHeight: fileListMaxHeight + 'px' }">
+          <div v-if="files.length === 0" class="flex items-center justify-center h-32 text-gray-500">
+            <div class="text-center">
+              <i class="fas fa-folder-open text-4xl mb-2"></i>
+              <p>暂无文件</p>
+            </div>
+          </div>
+          <div v-else class="divide-y divide-gray-200">
+            <div v-for="file in files" :key="file.id" class="px-6 py-4 hover:bg-gray-50 bg-white">
+              <div class="grid grid-cols-4 gap-4 items-center">
                 <div class="flex items-center">
                   <i :class="[getFileIcon(file.file_name), 'text-gray-400', 'mr-3']"></i>
-                  <span>{{ file.file_name }}</span>
+                  <span class="truncate">{{ file.file_name }}</span>
                 </div>
-              </td>
-              <td class="px-6 py-4 text-sm text-gray-500">
-                {{ file.file_size }}
-              </td>
-              <td class="px-6 py-4 text-sm text-gray-500">
-                {{ file.file_time }}</td>
-              <td class="px-6 py-4 text-right text-sm font-medium">
-                <button class="text-blue-600 hover:text-blue-900 mr-3">预览</button>
-                <button class="text-blue-600 hover:text-blue-900 mr-3">下载</button>
-                <button class="text-red-600 hover:text-red-900">删除</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                <div class="text-sm text-gray-500">
+                  {{ file.file_size }}
+                </div>
+                <div class="text-sm text-gray-500">
+                  {{ file.file_time }}
+                </div>
+                <div class="text-right text-sm font-medium">
+                  <button class="text-blue-600 hover:text-blue-900 mr-3">预览</button>
+                  <button @click="downloadFile(file)" class="text-blue-600 hover:text-blue-900 mr-3">下载</button>
+                  <button class="text-red-600 hover:text-red-900">删除</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -292,7 +294,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { ElMessage } from 'element-plus'
 import { addNewFolderServer,selectAllFolderServer,updateFolderNameServer,delateFolderServer,uploadFileServer, selectAllFileServer, selectFilesByNameServer } from '@/api/folder';
 
@@ -671,6 +673,38 @@ const totalFiles = async () => {
 
 const isSearching = ref(false); // 标记是否处于搜索状态
 
+// 动态高度计算
+const windowHeight = ref(window.innerHeight);
+const fileListMaxHeight = computed(() => {
+  // 精确计算：使用视口高度减去所有固定元素
+  const navHeight = 64; // 导航栏高度 (h-16 = 4rem = 64px)
+  const operationAreaHeight = 90; // 操作区高度 (按钮 + 搜索 + 间距)
+  const folderGridHeight = 170; // 文件夹网格高度 (精确估算)
+  const padding = 48; // 内边距 (py-6 = 1.5rem = 24px * 2)
+  const tableHeaderHeight = 48; // 表格头部高度
+  const bottomSpacing = 8; // 最小底部间距，保持一点距离
+  
+  const availableHeight = windowHeight.value - navHeight - operationAreaHeight - folderGridHeight - padding - tableHeaderHeight - bottomSpacing;
+  
+  // 根据文件数量动态调整高度
+  const fileCount = files.value.length;
+  if (fileCount === 0) {
+    return 120; // 空状态最小高度
+  } else if (fileCount <= 3) {
+    // 文件较少时，使用内容高度，但不超过可用高度
+    const contentHeight = fileCount * 60 + 20; // 每行约60px + 边距
+    return Math.min(contentHeight, availableHeight);
+  } else {
+    // 文件较多时，使用可用高度
+    return Math.max(120, availableHeight);
+  }
+});
+
+// 监听窗口大小变化
+const handleResize = () => {
+  windowHeight.value = window.innerHeight;
+};
+
 function handleSearch() {
   if (searchQuery.value.trim()) {
     isSearching.value = true;
@@ -695,10 +729,45 @@ const selectAllFilesByKeyword = async (keyword: string) => {
   }
 };
 
+// 下载文件功能
+const downloadFile = async (file: any) => {
+  try {
+    ElMessage.info('正在准备下载...');
+    
+    // 直接使用文件路径创建下载链接
+    const link = document.createElement('a');
+    link.href = file.file_path; // 直接使用服务器上的文件路径
+    link.download = file.file_name; // 设置下载的文件名
+    link.style.display = 'none'; // 隐藏链接
+    
+    // 添加到DOM并触发点击
+    document.body.appendChild(link);
+    link.click();
+    
+    // 延迟清理DOM，确保下载开始
+    setTimeout(() => {
+      document.body.removeChild(link);
+    }, 100);
+    
+    ElMessage.success(`开始下载文件: ${file.file_name}`);
+  } catch (error) {
+    console.error('下载文件失败:', error);
+    ElMessage.error('下载文件失败，请检查文件路径');
+  }
+};
+
 onMounted(() => {
   selectAllFolder();
   selectAllFiles(folderName.value.folder_name); // 获取所有文件
   totalFiles();
+  
+  // 添加窗口大小变化监听器
+  window.addEventListener('resize', handleResize);
+});
+
+onUnmounted(() => {
+  // 移除窗口大小变化监听器
+  window.removeEventListener('resize', handleResize);
 });
 
 </script>
@@ -715,6 +784,11 @@ select {
   -moz-appearance: none;
   appearance: none;
   background-image: none; /* 隐藏默认箭头 */
+}
+
+/* 确保文件列表能够正确显示 */
+.overflow-hidden {
+  overflow: hidden;
 }
 
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="h-screen bg-gray-50 flex flex-col">
     <!-- 顶部导航 -->
     <nav class="bg-white shadow-sm">
       <div class="max-w-7xl px-4 h-16 flex items-center">
@@ -13,8 +13,10 @@
     </nav>
 
     <!-- 条件渲染组件 -->
-    <AgentList v-if="!showCreateForm" @create-agent="handleCreateAgent" />
-    <CreateAgent v-else @back-to-list="showCreateForm = false" :agent-id="currentAgentId" />
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <AgentList v-if="!showCreateForm" @create-agent="handleCreateAgent" />
+      <CreateAgent v-else @back-to-list="showCreateForm = false" :agent-id="currentAgentId" />
+    </div>
   </div>
 </template>
 

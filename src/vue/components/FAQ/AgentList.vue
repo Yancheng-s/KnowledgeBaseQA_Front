@@ -1,4 +1,5 @@
 <template>
+  <div class="flex-1 flex flex-col overflow-hidden">
     <!-- 搜索区域 -->
     <div class="flex items-center justify-between px-4 py-6">
       <div class="flex space-x-4">
@@ -19,8 +20,17 @@
         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
       </div>
     </div> 
-    <!-- 应用列表 -->
-    <div class="grid grid-cols-3 gap-4 px-4">
+    
+    <!-- 应用列表 - 可滚动区域 -->
+    <div class="flex-1 overflow-y-auto px-4 pb-1" :style="{ maxHeight: agentListMaxHeight + 'px' }">
+      <div v-if="applications.length === 0" class="flex items-center justify-center h-64 text-gray-500">
+        <div class="text-center">
+          <i class="fas fa-robot text-4xl mb-2"></i>
+          <p>暂无智能体</p>
+          <p class="text-sm mt-1">点击"创建智能体"开始使用</p>
+        </div>
+      </div>
+      <div v-else class="grid grid-cols-3 gap-4">
         <template v-for="app in applications" :key="app.id">
             <div class="bg-white rounded-lg shadow-sm border py-4 pl-5 pr-4 hover:shadow-md transition-shadow">
             <div class="flex items-start justify-between mb-4">
@@ -94,7 +104,9 @@
             </div>
             </div>
         </template>
+      </div>
     </div>
+  </div>
 
     <!-- 悬浮窗对话 -->
     <FloatingChat 
@@ -106,7 +118,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { addAgent, selectAllAgents } from '@/api/agent';
 import { generateUniqueIntId } from '@/utils/generateId';
 import FloatingChat from './FloatingChat.vue';
@@ -143,6 +155,36 @@ const applications = ref<Application[]>([
     }
   }
 ]);
+
+// 动态高度计算
+const windowHeight = ref(window.innerHeight);
+const agentListMaxHeight = computed(() => {
+  // 计算可用高度：窗口高度 - 导航栏 - 搜索区域 - 内边距
+  const navHeight = 64; // 导航栏高度 (h-16 = 4rem = 64px)
+  const searchAreaHeight = 80; // 搜索区域高度 (按钮 + 搜索 + 间距) - 再减少10px
+  const padding = 32; // 内边距 - 再减少8px
+  const bottomSpacing = 0; // 底部间距 - 完全移除
+  
+  const availableHeight = windowHeight.value - navHeight - searchAreaHeight - padding - bottomSpacing;
+  
+  // 根据智能体数量动态调整高度
+  const agentCount = applications.value.length;
+  if (agentCount === 0) {
+    return 160; // 空状态最小高度 - 再减少20px
+  } else if (agentCount <= 6) {
+    // 智能体较少时，使用内容高度，但不超过可用高度
+    const contentHeight = Math.ceil(agentCount / 3) * 160 + 12; // 每行约160px + 边距 - 再减少高度
+    return Math.min(contentHeight, availableHeight);
+  } else {
+    // 智能体较多时，使用可用高度
+    return Math.max(160, availableHeight);
+  }
+});
+
+// 监听窗口大小变化
+const handleResize = () => {
+  windowHeight.value = window.innerHeight;
+};
 
 const selectAllKBS = async () => {
   const res = await selectAllAgents();
@@ -315,6 +357,14 @@ const handleToggleFullscreen = (isFullscreen: boolean) => {
 
 onMounted(() => {
   selectAllKBS();
+  
+  // 添加窗口大小变化监听器
+  window.addEventListener('resize', handleResize);
+});
+
+onUnmounted(() => {
+  // 移除窗口大小变化监听器
+  window.removeEventListener('resize', handleResize);
 });
 
 </script>
