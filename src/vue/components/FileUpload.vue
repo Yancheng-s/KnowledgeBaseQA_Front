@@ -109,7 +109,7 @@
                   {{ file.file_time }}
                 </div>
                 <div class="text-right text-sm font-medium">
-                  <button class="text-blue-600 hover:text-blue-900 mr-3">预览</button>
+                  <button @click="previewFile(file)" class="text-blue-600 hover:text-blue-900 mr-3">预览</button>
                   <button @click="downloadFile(file)" class="text-blue-600 hover:text-blue-900 mr-3">下载</button>
                   <button @click="deleteFile(file)" class="text-red-600 hover:text-red-900">删除</button>
                 </div>
@@ -318,6 +318,14 @@
       </div>
     </div>
 
+    <!-- 文件预览组件 -->
+    <FilePreview 
+      :show="showPreviewModal" 
+      :fileInfo="previewFileInfo"
+      @close="closePreview"
+      @download="handlePreviewDownload"
+    />
+
   </div>
 </template>
 
@@ -325,6 +333,7 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { ElMessage } from 'element-plus'
 import { addNewFolderServer,selectAllFolderServer,updateFolderNameServer,delateFolderServer,uploadFileServer, selectAllFileServer, selectFilesByNameServer, deleteFileByNameServer } from '@/api/folder';
+import FilePreview from './FilePreview.vue';
 
 
 const currentFolder = ref('总览');
@@ -342,6 +351,10 @@ const editedFolderName = ref<string>(''); // 修改后的文件夹名称
 // 文件删除相关状态
 const showFileDeleteModal = ref(false); // 控制文件删除确认弹窗
 const fileToDelete = ref<any>(null); // 要删除的文件信息
+
+// 预览相关状态
+const showPreviewModal = ref(false); // 控制预览弹窗显示
+const previewFileInfo = ref<any>(null); // 预览的文件信息
 
 const overviewIcon = new URL('@/img/0c016d545482987f0ca9e4baa92476e1.jpg', import.meta.url).href;
 
@@ -820,6 +833,23 @@ const confirmDeleteFile = async () => {
     console.error('删除文件失败:', error);
     ElMessage.error('删除文件失败，请重试');
   }
+};
+
+// 预览文件
+const previewFile = (file: any) => {
+  previewFileInfo.value = file;
+  showPreviewModal.value = true;
+};
+
+// 关闭预览
+const closePreview = () => {
+  showPreviewModal.value = false;
+  previewFileInfo.value = null;
+};
+
+// 处理预览中的下载
+const handlePreviewDownload = (fileInfo: any) => {
+  downloadFile(fileInfo);
 };
 
 onMounted(() => {

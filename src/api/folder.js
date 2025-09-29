@@ -31,5 +31,22 @@ export const selectFilesByNameServer = (data) => {
 }
 
 export const deleteFileByNameServer = (data) => {
-  return request.post('/deletefilebyname', data)
+    return request.post('/deletefilebyname', data)
+}
+
+// 预览功能相关API
+export const getFilePreviewUrlServer = (data) => {
+    return request.post('/getfilepreview', data)
+}
+
+export const getFileContentServer = (data) => {
+    return request.get('/getfilecontent', { params: data })
+}
+
+export const getFileInfoServer = (data) => {
+    return request.post('/getfileinfo', data)
+}
+
+export const downloadFileServer = (data) => {
+    return request.post('/downloadfile', data, { responseType: 'blob' })
 }

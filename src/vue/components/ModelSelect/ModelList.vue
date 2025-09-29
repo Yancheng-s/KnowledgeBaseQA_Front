@@ -35,8 +35,8 @@
         <div
             v-for="item in modelList"
             :key="item.id"
-            class="bg-white rounded-xl shadow-sm border border-[#f0f0f0] p-6 hover:shadow-md transition-shadow">
-            <div class="flex flex-col gap-3">
+            class="bg-white rounded-xl shadow-sm border border-[#f0f0f0] p-6 hover:shadow-md transition-shadow flex flex-col h-full">
+            <div class="flex flex-col gap-3 flex-1">
                 <div class="flex items-center gap-4">
                     <img
                     :src="getVendorPng(item.model_name)"
@@ -47,19 +47,19 @@
                     <div class="flex flex-col flex-1 min-w-0">
                         <div class="flex items-center gap-2 flex-wrap">
                             <span class="font-semibold text-base text-[#222] truncate">{{ item.model_name }}</span>
-                            <span class="bg-[#f5f6fa] text-[#8a919f] text-xs px-2 py-[2px] rounded">图片生成</span>
+                            <span class="bg-[#f5f6fa] text-[#8a919f] text-xs px-2 py-[2px] rounded">文本生成</span>
                         </div>
                     </div>
                 </div>
-                <div class="text-[#5c6273] text-[13px] leading-relaxed mt-2">
+                <div class="text-[#5c6273] text-[13px] leading-relaxed mt-2 flex-1">
                     {{ item.model_presentation }}
                 </div>
-                <div class="flex items-center justify-between flex-wrap">
-                    <span class="text-xs text-[#b1b5be]">通义</span>
+                <div class="flex items-center justify-between flex-wrap mt-4">
+                    <span class="text-xs text-[#b1b5be]">{{ getVendorName(item.model_name) }}</span>
                     <span class="text-xs text-[#b1b5be]">{{ item.model_date.split(' ')[0] }}更新</span>
                 </div>
             </div>
-            <div class="flex items-center justify-between mt-6 border-t border-[#f0f0f0] pt-3">
+            <div class="flex items-center justify-between mt-6 border-t border-[#f0f0f0] pt-3 mt-auto">
               <button class="flex-1 text-[#222] text-sm flex items-center justify-center gap-1 hover:underline bg-transparent border-0">
                 <svg width="16" height="16" fill="none" class="mr-1" viewBox="0 0 16 16"><path d="M8 2.667a5.333 5.333 0 1 1 0 10.666A5.333 5.333 0 0 1 8 2.667Zm0-1.334a6.667 6.667 0 1 0 0 13.334A6.667 6.667 0 0 0 8 1.333Zm0 3.334a.667.667 0 0 1 .667.666v2.334a.667.667 0 0 1-.667.666H6.667a.667.667 0 1 1 0-1.333h.666V5.333A.667.667 0 0 1 8 4.667Zm0 6a.667.667 0 1 1 0 1.333.667.667 0 0 1 0-1.333Z" fill="#8a919f"/></svg>
                 查看详情
@@ -84,7 +84,7 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue';
 import AddModel from './AddModel.vue';
-import { getVendorPng } from '@/utils/getVendorPng.js';
+import { getVendorPng, getVendorName } from '@/utils/getVendorPng.js';
 import { selectAllModelServer } from '@/api/model.js';
 
 const searchQuery = ref('');
