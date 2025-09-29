@@ -31,7 +31,7 @@
     </div> 
     
     <!-- 应用列表 - 可滚动区域 -->
-    <div class="flex-1 overflow-y-auto px-4 pb-1" :style="{ maxHeight: agentListMaxHeight + 'px' }">
+    <div class="flex-1 px-4 pb-1" :class="{ 'overflow-y-auto': agentListMaxHeight !== 'none' }" :style="agentListMaxHeight !== 'none' ? { maxHeight: agentListMaxHeight + 'px' } : {}">
       <!-- 加载动画 -->
       <div v-if="isLoading" class="flex items-center justify-center h-64">
         <div class="text-center">
@@ -52,7 +52,7 @@
       </div>
       <div v-else class="grid grid-cols-3 gap-4">
         <template v-for="app in applications" :key="app.id">
-            <div class="bg-white rounded-lg shadow-sm border py-4 pl-5 pr-4 hover:shadow-md transition-shadow">
+            <div :data-agent-id="app.id" class="bg-white rounded-lg shadow-sm border py-4 pl-5 pr-4 hover:shadow-md transition-shadow">
             <div class="flex items-start justify-between mb-4">
                 <div>
                 <h3 class="text-lg font-medium mb-2 flex items-center">
@@ -70,7 +70,7 @@
             <div class="flex items-center justify-between">
                 <span class="text-sm text-gray-500">{{ app.type }}</span>
                 <div class="flex items-center space-x-2">
-                <button class="text-blue-600 px-4 py-1.5 border border-blue-600 !rounded-button whitespace-nowrap">配置</button>
+                <button @click="handleConfig(app.id)" class="text-blue-600 px-4 py-1.5 border border-blue-600 !rounded-button whitespace-nowrap">配置</button>
                 <button class="bg-blue-600 text-white px-4 py-1.5 !rounded-button whitespace-nowrap" @click="openFloatingChat(app.id)">使用</button>
 
               <!-- 悬停菜单触发按钮 -->
@@ -86,8 +86,8 @@
               <!-- 下拉菜单 -->
               <div 
                 v-if="showMenu[app.id]" 
-                class="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-lg border border-gray-200 z-10"
-                style="transform: translateX(55px);"
+                class="absolute w-32 bg-white rounded-lg shadow-lg border border-gray-200 z-10"
+                :class="getMenuPosition(app.id)"
                 @click.stop
                 @mouseenter="cancelHideMenu(app.id)"
                 @mouseleave="hideMenuForApp(app.id)"
@@ -135,14 +135,61 @@
       @close="closeFloatingChat"
       @toggle-fullscreen="handleToggleFullscreen"
     />
+
+    <!-- 智能体配置页面 -->
+    <AgentConfig 
+      v-if="showConfigDialog"
+      :agent-id="configAgentId"
+      :agent-data="configAgentData"
+      @close="closeConfig"
+      @saved="onConfigSaved"
+    />
+
+    <!-- 修改名称对话框 -->
+    <div v-if="showEditDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
+        <h3 class="text-lg font-medium mb-4">修改智能体名称</h3>
+        
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            新的智能体名称
+          </label>
+          <input 
+            type="text" 
+            v-model="newAgentName"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="请输入新的智能体名称"
+            @keyup.enter="confirmEdit"
+            ref="nameInput"
+          />
+        </div>
+        
+        <div class="flex justify-end space-x-3">
+          <button 
+            @click="cancelEdit"
+            class="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
+          >
+            取消
+          </button>
+          <button 
+            @click="confirmEdit"
+            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            确认修改
+          </button>
+        </div>
+      </div>
+    </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue';
-import { addAgent, selectAllAgents } from '@/api/agent';
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue';
+import { addAgent, selectAllAgents, deleteAgentById, updateAgentNameById } from '@/api/agent';
 import { generateUniqueIntId } from '@/utils/generateId';
 import FloatingChat from './FloatingChat.vue';
+import AgentConfig from './AgentConfig.vue';
 import electronWindowManager from '@/utils/electron-window';
+import { ElMessage, ElMessageBox } from 'element-plus';
 
 // 图片导入
 const agentIcon = '/src/img/agent/智能体.png';
@@ -160,6 +207,7 @@ interface Application {
     class: string;
     dotClass: string;
   };
+  originalData?: any; // 原始数据用于复制
 }
 
 const applications = ref<Application[]>([
@@ -186,20 +234,19 @@ const windowHeight = ref(window.innerHeight);
 const agentListMaxHeight = computed(() => {
   // 计算可用高度：窗口高度 - 导航栏 - 搜索区域 - 内边距
   const navHeight = 64; // 导航栏高度 (h-16 = 4rem = 64px)
-  const searchAreaHeight = 80; // 搜索区域高度 (按钮 + 搜索 + 间距) - 再减少10px
-  const padding = 32; // 内边距 - 再减少8px
-  const bottomSpacing = 0; // 底部间距 - 完全移除
+  const searchAreaHeight = 80; // 搜索区域高度 (按钮 + 搜索 + 间距)
+  const padding = 32; // 内边距
+  const bottomSpacing = 0; // 底部间距
   
   const availableHeight = windowHeight.value - navHeight - searchAreaHeight - padding - bottomSpacing;
   
   // 根据智能体数量动态调整高度
   const agentCount = applications.value.length;
   if (agentCount === 0) {
-    return 160; // 空状态最小高度 - 再减少20px
+    return 160; // 空状态最小高度
   } else if (agentCount <= 6) {
-    // 智能体较少时，使用内容高度，但不超过可用高度
-    const contentHeight = Math.ceil(agentCount / 3) * 160 + 12; // 每行约160px + 边距 - 再减少高度
-    return Math.min(contentHeight, availableHeight);
+    // 智能体较少时，让内容自然撑开，不设置最大高度限制
+    return 'none';
   } else {
     // 智能体较多时，使用可用高度
     return Math.max(160, availableHeight);
@@ -225,7 +272,9 @@ const selectAllKBS = async () => {
           text: item.agent_state === 'active' ? '已发布' : '草稿',
           class: item.agent_state === 'active' ? 'text-green-600 text-sm' : 'text-red-600 text-sm',
           dotClass: item.agent_state === 'active' ? 'text-green-600' : 'text-red-600',
-        }
+        },
+        // 保存原始数据用于复制
+        originalData: item
       };
     });
     
@@ -296,10 +345,21 @@ async function createAgent() {
 const showMenu = ref<Record<string, boolean>>({}); // 菜单是否显示
 const isHoveringMenu = ref<Record<string, boolean>>({}); // 是否正在悬停菜单
 const hideTimeouts = ref<Record<string, number>>({});
+const menuPositions = ref<Record<string, { isBottom: boolean; isRight: boolean }>>({});
+
+// 修改名称相关状态
+const showEditDialog = ref(false);
+const editingAgentId = ref<string | null>(null);
+const newAgentName = ref('');
 
 // 悬浮窗相关状态
 const showFloatingChat = ref(false);
 const selectedAgentId = ref<string | null>(null);
+
+// 配置页面相关状态
+const showConfigDialog = ref(false);
+const configAgentId = ref<string | null>(null);
+const configAgentData = ref<any>(null);
 
 const showMenuForApp = (id: string) => {
   // 清除可能存在的隐藏定时器
@@ -307,7 +367,55 @@ const showMenuForApp = (id: string) => {
     clearTimeout(hideTimeouts.value[id]);
     delete hideTimeouts.value[id];
   }
+  
+  // 计算菜单位置
+  calculateMenuPosition(id);
+  
   showMenu.value[id] = true;
+};
+
+// 计算菜单位置
+const calculateMenuPosition = (id: string) => {
+  // 使用 nextTick 确保 DOM 已更新
+  nextTick(() => {
+    const cardElement = document.querySelector(`[data-agent-id="${id}"]`);
+    if (!cardElement) return;
+    
+    const rect = cardElement.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+    
+    // 检查是否在底部
+    const isBottom = rect.bottom + 120 > viewportHeight; // 120px 是菜单的大概高度
+    // 检查是否在右侧
+    const isRight = rect.right + 130 > viewportWidth; // 130px 是菜单的大概宽度
+    
+    menuPositions.value[id] = { isBottom, isRight };
+  });
+};
+
+// 获取菜单位置类名
+const getMenuPosition = (id: string) => {
+  const position = menuPositions.value[id];
+  if (!position) return 'right-0 mt-2';
+  
+  let classes = '';
+  
+  // 垂直位置
+  if (position.isBottom) {
+    classes += 'bottom-full mb-2 ';
+  } else {
+    classes += 'top-full mt-2 ';
+  }
+  
+  // 水平位置
+  if (position.isRight) {
+    classes += 'right-0 ';
+  } else {
+    classes += 'left-0 ';
+  }
+  
+  return classes;
 };
 
 // 添加方法：打开/关闭某个 app 的菜单
@@ -334,18 +442,178 @@ const cancelHideMenu = (id: string) => {
 };
 
 const handleEdit = (id: string) => {
-  console.log('修改应用名:', id);
+  // 找到要修改的智能体
+  const agent = applications.value.find(app => app.id === id);
+  if (!agent) {
+    ElMessage.error('未找到要修改的智能体');
+    return;
+  }
+  
+  editingAgentId.value = id;
+  newAgentName.value = agent.name;
+  showEditDialog.value = true;
   showMenu.value[id] = false;
 };
 
-const handleCopy = (id: string) => {
-  console.log('复制应用:', id);
-  showMenu.value[id] = false;
+// 处理配置按钮点击
+const handleConfig = (id: string) => {
+  // 找到要配置的智能体
+  const agent = applications.value.find(app => app.id === id);
+  if (!agent) {
+    ElMessage.error('未找到要配置的智能体');
+    return;
+  }
+  
+  configAgentId.value = id;
+  configAgentData.value = agent.originalData;
+  showConfigDialog.value = true;
 };
 
-const handleDelete = (id: string) => {
-  console.log('删除应用:', id);
-  showMenu.value[id] = false;
+// 关闭配置页面
+const closeConfig = () => {
+  showConfigDialog.value = false;
+  configAgentId.value = null;
+  configAgentData.value = null;
+};
+
+// 配置保存成功
+const onConfigSaved = async () => {
+  closeConfig();
+  // 重新加载智能体列表
+  await selectAllKBS();
+};
+
+const handleCopy = async (id: string) => {
+  try {
+    // 找到要复制的智能体
+    const agent = applications.value.find(app => app.id === id);
+    if (!agent) {
+      ElMessage.error('未找到要复制的智能体');
+      return;
+    }
+    
+    // 显示确认对话框
+    await ElMessageBox.confirm(
+      `确定要复制智能体"${agent.name}"吗？`,
+      '确认复制',
+      {
+        confirmButtonText: '确定复制',
+        cancelButtonText: '取消',
+        type: 'info'
+      }
+    );
+    
+    // 显示复制中的加载状态
+    isLoading.value = true;
+    showMenu.value[id] = false;
+    
+    try {
+      // 生成新的agent_id
+      const generatedId = generateUniqueIntId();
+      const newAgentId = typeof generatedId === 'string' ? parseInt(generatedId, 10) : generatedId;
+      
+      // 获取原始数据
+      const originalData = agent.originalData;
+      
+      // 创建复制数据，修改名称和ID
+      const copyData = {
+        ...originalData,
+        agent_name: `${originalData.agent_name}副本`,
+        agent_id: newAgentId,
+        agent_state: "0" // 复制后设为草稿状态
+      };
+      
+      // 发送复制请求
+      await addAgent(copyData);
+      
+      // 复制成功，显示成功消息
+      ElMessage.success('智能体复制成功');
+      
+      // 复制成功后重新加载列表
+      await selectAllKBS();
+    } catch (error) {
+      // 如果复制失败，显示错误消息
+      console.error('复制智能体失败:', error);
+      ElMessage.error('复制智能体失败，请重试');
+    }
+  } catch (error) {
+    // 用户取消复制
+    console.log('用户取消复制');
+  }
+};
+
+// 确认修改名称
+const confirmEdit = async () => {
+  if (!editingAgentId.value || !newAgentName.value.trim()) {
+    ElMessage.warning('请输入新的智能体名称');
+    return;
+  }
+  
+  try {
+    await updateAgentNameById(editingAgentId.value, newAgentName.value.trim());
+    ElMessage.success('智能体名称修改成功');
+    
+    // 更新本地数据
+    const agent = applications.value.find(app => app.id === editingAgentId.value);
+    if (agent) {
+      agent.name = newAgentName.value.trim();
+    }
+    
+    // 关闭对话框
+    showEditDialog.value = false;
+    editingAgentId.value = null;
+    newAgentName.value = '';
+  } catch (error) {
+    console.error('修改智能体名称失败:', error);
+    ElMessage.error('修改智能体名称失败，请重试');
+  }
+};
+
+// 取消修改
+const cancelEdit = () => {
+  showEditDialog.value = false;
+  editingAgentId.value = null;
+  newAgentName.value = '';
+};
+
+const handleDelete = async (id: string) => {
+  try {
+    // 找到要删除的智能体信息
+    const agent = applications.value.find(app => app.id === id);
+    if (!agent) {
+      ElMessage.error('未找到要删除的智能体');
+      return;
+    }
+
+    await ElMessageBox.confirm(
+      `确定要删除智能体"${agent.name}"吗？此操作不可恢复。`,
+      '确认删除',
+      {
+        confirmButtonText: '确定删除',
+        cancelButtonText: '取消',
+        type: 'warning',
+        confirmButtonClass: 'el-button--danger'
+      }
+    );
+    
+    // 显示删除中的加载状态
+    isLoading.value = true;
+    showMenu.value[id] = false;
+    
+    try {
+      await deleteAgentById(id);
+      ElMessage.success('智能体删除成功');
+      
+      // 删除成功后重新加载列表
+      await selectAllKBS();
+    } catch (error) {
+      console.error('删除智能体失败:', error);
+      ElMessage.error('删除智能体失败，请重试');
+    }
+  } catch (error) {
+    // 用户取消删除
+    console.log('用户取消删除');
+  }
 };
 
 const isMenuActive = (id: string): boolean => {

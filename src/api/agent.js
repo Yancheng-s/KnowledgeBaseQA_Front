@@ -44,3 +44,17 @@ export const deleteToolCache = (data) => {
 export const processAgent = (agentId, data) => {
   return request.post(`/processAgent/${agentId}`, data)
 }
+
+export const deleteAgentById = (agent_id) => {
+  return request.delete(`/deleteAgentById/${agent_id}`)
+}
+
+export const updateAgentNameById = (agent_id, agent_name) => {
+  return request.put(`/updateAgentNameById/${agent_id}`, {
+    agent_name
+  })
+}
+
+export const updateAgentById = (agent_id, data) => {
+  return request.put(`/updateAgentById/${agent_id}`, data)
+}

@@ -14,3 +14,9 @@ export const searchKBSByName = (keyword) => {
         params: { keyword }
     })
 }
+
+export const deleteKBSByName = (kon_name) => {
+    return request.delete('/deleteKBSByName', {
+        params: { kon_name }
+    })
+}

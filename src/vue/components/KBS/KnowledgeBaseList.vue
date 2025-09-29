@@ -90,7 +90,7 @@
                 <button class="text-gray-600 hover:text-gray-700 mr-4">
                   <i></i>编辑
                 </button>
-                <button class="text-red-600 hover:text-red-700">
+                <button @click="handleDelete(item)" class="text-red-600 hover:text-red-700">
                   <i></i>删除
                 </button>
               </td>
@@ -103,8 +103,9 @@
 </template>
 
 <script lang="ts" setup>
-import { selectAllKBS, searchKBSByName } from '@/api/KBS'
+import { selectAllKBS, searchKBSByName, deleteKBSByName } from '@/api/KBS'
 import { onMounted, ref } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const emit = defineEmits<{
   (e: 'create'): void
@@ -168,6 +169,39 @@ const loadAllKnowledgeBases = async () => {
 const clearSearch = () => {
   searchQuery.value = ''
   loadAllKnowledgeBases()
+}
+
+// 删除知识库
+const handleDelete = async (item: any) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除知识库"${item.title}"吗？此操作不可恢复。`,
+      '确认删除',
+      {
+        confirmButtonText: '确定删除',
+        cancelButtonText: '取消',
+        type: 'warning',
+        confirmButtonClass: 'el-button--danger'
+      }
+    )
+    
+    // 显示删除中的加载状态
+    isLoading.value = true
+    
+    try {
+      await deleteKBSByName(item.title)
+      ElMessage.success('知识库删除成功')
+      
+      // 删除成功后重新加载列表
+      await loadAllKnowledgeBases()
+    } catch (error) {
+      console.error('删除知识库失败:', error)
+      ElMessage.error('删除知识库失败，请重试')
+    }
+  } catch (error) {
+    // 用户取消删除
+    console.log('用户取消删除')
+  }
 }
 
 const knowledgeList = ref([
