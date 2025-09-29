@@ -239,7 +239,7 @@
                             <tbody>
                               <tr v-for="file in files" :key="file.id" class="border-t border-gray-200">
                                 <td class="py-4 px-6">
-                                  <input type="checkbox" v-model="file.selected" class="rounded text-blue-600">
+                                  <input type="checkbox" v-model="file.selected" @change="updateGlobalFileSelection(file)" class="rounded text-blue-600">
                                 </td>
                                 <td class="py-4">{{ file.name }}</td>
                                 <td class="py-4 px-6">
@@ -559,29 +559,54 @@ const toggleDialog = () => {
 };
 
 interface File {
-  id: number;
+  id: string;
   name: string;
   type: string;
   path: string;
   selected: boolean;
+  folder?: string;
+  size?: string;
+  time?: string;
+  icon?: string;
 }
 
-const files = ref<File[]>([
-  { id: 1, name: '', type: '', path:'', selected: false }
-]);
+const files = ref<File[]>([]);
+const allFiles = ref<File[]>([]); // 存储所有文件夹的文件
+const currentFolder = ref<string>(''); // 当前选中的文件夹
 
 const currentPage = ref(1);
 const selectAll = ref(false);
 
-const selectedFiles = computed(() => files.value.filter(file => file.selected));
+const selectedFiles = computed(() => allFiles.value.filter(file => file.selected));
 const selectedCount = computed(() => selectedFiles.value.length);
 
 const toggleSelectAll = () => {
-  files.value.forEach(file => file.selected = selectAll.value);
+  // 只影响当前文件夹的文件
+  files.value.forEach(file => {
+    file.selected = selectAll.value;
+    // 同时更新全局文件列表中的对应文件
+    const globalFile = allFiles.value.find(f => f.id === file.id);
+    if (globalFile) {
+      globalFile.selected = selectAll.value;
+    }
+  });
 };
 
 const removeFile = (file: File) => {
   file.selected = false;
+  // 同时更新全局文件列表中的对应文件
+  const globalFile = allFiles.value.find(f => f.id === file.id);
+  if (globalFile) {
+    globalFile.selected = false;
+  }
+};
+
+const updateGlobalFileSelection = (file: File) => {
+  // 同步更新全局文件列表中的对应文件
+  const globalFile = allFiles.value.find(f => f.id === file.id);
+  if (globalFile) {
+    globalFile.selected = file.selected;
+  }
 };
 
 // 文件夹/类目数据模型
@@ -617,23 +642,53 @@ const selectAllFolder = async () => {
 const selectFilesByFolder = async (folderName: string = "") => {
   try {
     selectAll.value = false;
+    currentFolder.value = folderName;
+    
+    // 更新文件夹选择状态
+    categories.forEach(category => {
+      category.isSelected = category.name === folderName;
+    });
+    
     // 调用接口获取文件列表
     const res = await selectAllFileServer({ folder_name: folderName });
 
     // 检查接口返回的状态码和数据格式
     if (res.status === 200 && Array.isArray(res.data)) {
+      // 检查是否已经存在该文件夹的文件
+      const existingFiles = allFiles.value.filter(file => file.folder === folderName);
+      
+      // 为每个文件生成唯一ID（使用文件夹名+文件名+路径的组合）
+      const newFiles = res.data.map((item, index) => {
+        const fileId = `${folderName}_${item.file_name}_${index}`;
+        
+        // 检查是否已经存在该文件，如果存在则保持选择状态
+        const existingFile = existingFiles.find(f => f.id === fileId);
+        const isSelected = existingFile ? existingFile.selected : false;
+        
+        return {
+          id: fileId, // 使用文件夹名+文件名+索引作为唯一标识
+          name: item.file_name, // 文件名称
+          type: getFileExtension(item.file_name), // 解析文件类型
+          selected: isSelected, // 保持之前的选择状态
+          icon: getFileIcon(getFileIcon(item.file_name)), // 动态设置图标
+          path: item.file_path, // 文件路径
+          size: item.file_size, // 文件大小
+          time: item.file_time, // 文件时间
+          folder: folderName, // 添加文件夹信息
+        };
+      });
 
-      // 更新文件列表数据
-      files.value = res.data.map((item, index) => ({
-        id: index + 1, // 使用索引作为唯一标识
-        name: item.file_name, // 文件名称
-        type: getFileExtension(item.file_name), // 解析文件类型
-        selected: false, // 默认未选中
-        icon: getFileIcon(getFileIcon(item.file_name)), // 动态设置图标
-        path: item.file_path, // 文件路径
-        size: item.file_size, // 文件大小
-        time: item.file_time, // 文件时间
-      }));
+      // 移除该文件夹的旧文件
+      allFiles.value = allFiles.value.filter(file => file.folder !== folderName);
+      
+      // 添加新文件到全局文件列表
+      allFiles.value.push(...newFiles);
+      
+      // 更新当前显示的文件列表（仅显示当前文件夹的文件）
+      files.value = newFiles;
+      
+      // 更新 selectAll 状态：如果当前文件夹的所有文件都被选中，则 selectAll 为 true
+      selectAll.value = newFiles.length > 0 && newFiles.every(file => file.selected);
     } else {
       console.error("接口返回的数据格式不正确:", res);
     }
@@ -644,19 +699,9 @@ const selectFilesByFolder = async (folderName: string = "") => {
 
 const selectFilesByFirstFolder = async () => { 
   if (categories.length > 0) {
-        const firstFolderName = categories[0].name; // 获取第一个文件夹名称
-        const res1 = await selectAllFileServer( { folder_name: firstFolderName } ); // 调用方法    
-        files.value = res1.data.map((item, index) => ({
-          id: index + 1, // 使用索引作为唯一标识
-          name: item.file_name, // 文件名称
-          type: getFileExtension(item.file_name), // 解析文件类型
-          selected: false, // 默认未选中
-          icon: getFileIcon(getFileIcon(item.file_name)), // 动态设置图标
-          path: item.file_path, // 文件路径
-          size: item.file_size, // 文件大小
-          time: item.file_time, // 文件时间
-        }));
-      }
+    const firstFolderName = categories[0].name; // 获取第一个文件夹名称
+    await selectFilesByFolder(firstFolderName); // 使用统一的文件夹选择逻辑
+  }
 };
 
 // 辅助函数：解析文件扩展名
