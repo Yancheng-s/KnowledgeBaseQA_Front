@@ -32,7 +32,18 @@
     
     <!-- 应用列表 - 可滚动区域 -->
     <div class="flex-1 overflow-y-auto px-4 pb-1" :style="{ maxHeight: agentListMaxHeight + 'px' }">
-      <div v-if="applications.length === 0" class="flex items-center justify-center h-64 text-gray-500">
+      <!-- 加载动画 -->
+      <div v-if="isLoading" class="flex items-center justify-center h-64">
+        <div class="text-center">
+          <div class="relative mb-4">
+            <div class="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+            <i class="fas fa-robot text-blue-600 text-xl absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></i>
+          </div>
+          <p class="text-gray-600 text-sm">正在加载智能体...</p>
+        </div>
+      </div>
+      <!-- 空状态 -->
+      <div v-else-if="applications.length === 0" class="flex items-center justify-center h-64 text-gray-500">
         <div class="text-center">
           <i class="fas fa-robot text-4xl mb-2"></i>
           <p>暂无智能体</p>
@@ -168,6 +179,7 @@ const applications = ref<Application[]>([
 // 搜索相关
 const searchQuery = ref('');
 const allApplications = ref<Application[]>([]);
+const isLoading = ref(false);
 
 // 动态高度计算
 const windowHeight = ref(window.innerHeight);
@@ -200,24 +212,29 @@ const handleResize = () => {
 };
 
 const selectAllKBS = async () => {
-  const res = await selectAllAgents();
-  const mappedData = res.data.map((item: any) => {
-    return {
-      id: item.agent_id,
-      name: item.agent_name,
-      model: item.llm_api,
-      type: '智能体应用', 
-      status: {
-        text: item.agent_state === 'active' ? '已发布' : '草稿',
-        class: item.agent_state === 'active' ? 'text-green-600 text-sm' : 'text-red-600 text-sm',
-        dotClass: item.agent_state === 'active' ? 'text-green-600' : 'text-red-600',
-      }
-    };
-  });
-  
-  // 保存所有应用数据
-  allApplications.value = mappedData;
-  applications.value = mappedData;
+  isLoading.value = true;
+  try {
+    const res = await selectAllAgents();
+    const mappedData = res.data.map((item: any) => {
+      return {
+        id: item.agent_id,
+        name: item.agent_name,
+        model: item.llm_api,
+        type: '智能体应用', 
+        status: {
+          text: item.agent_state === 'active' ? '已发布' : '草稿',
+          class: item.agent_state === 'active' ? 'text-green-600 text-sm' : 'text-red-600 text-sm',
+          dotClass: item.agent_state === 'active' ? 'text-green-600' : 'text-red-600',
+        }
+      };
+    });
+    
+    // 保存所有应用数据
+    allApplications.value = mappedData;
+    applications.value = mappedData;
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const handleSearch = () => {

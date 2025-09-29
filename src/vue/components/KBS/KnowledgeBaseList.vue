@@ -32,7 +32,18 @@
     <!-- 列表内容 -->
     <div class="w-full px-4 py-0">
       <div class="bg-white rounded-lg border border-gray-200">
-        <table class="min-w-full divide-y divide-gray-200">
+        <!-- 加载动画 -->
+        <div v-if="isLoading" class="flex items-center justify-center h-64">
+          <div class="text-center">
+            <div class="relative mb-4">
+              <div class="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+              <i class="fas fa-book text-blue-600 text-xl absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></i>
+            </div>
+            <p class="text-gray-600 text-sm">正在加载知识库...</p>
+          </div>
+        </div>
+        <!-- 知识库列表 -->
+        <table v-else class="min-w-full divide-y divide-gray-200">
           <thead>
             <tr>
               <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -100,6 +111,7 @@ const emit = defineEmits<{
 }>()
 
 const searchQuery = ref('')
+const isLoading = ref(false)
 
 const handleSearch = async () => {
   if (!searchQuery.value.trim()) {
@@ -108,6 +120,7 @@ const handleSearch = async () => {
     return
   }
   
+  isLoading.value = true
   try {
     const res = await searchKBSByName(searchQuery.value.trim())
     console.log('搜索结果:', res)
@@ -125,10 +138,13 @@ const handleSearch = async () => {
     }
   } catch (error) {
     console.error('搜索失败:', error)
+  } finally {
+    isLoading.value = false
   }
 }
 
 const loadAllKnowledgeBases = async () => {
+  isLoading.value = true
   try {
     const res = await selectAllKBS()
     console.log(res)
@@ -144,6 +160,8 @@ const loadAllKnowledgeBases = async () => {
     knowledgeList.value = mappedData
   } catch (error) {
     console.error('获取知识库列表失败:', error)
+  } finally {
+    isLoading.value = false
   }
 }
 

@@ -52,6 +52,7 @@
 
       <!-- 文件夹网格 -->
       <div class="grid grid-cols-4 gap-4 mb-8">
+        <!-- 总览文件夹 -->
         <div class="flex items-center space-x-3 relative group bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md cursor-pointer"
              @click="enterFirstFolder()">
             <img :src="overviewIcon" alt="folder icon" class="w-12 h-12 object-cover">
@@ -61,7 +62,25 @@
             </div>
         </div>
 
-        <div v-for="folder in folders" 
+        <!-- 文件夹加载状态 - 骨架屏效果 -->
+        <template v-if="isLoadingFolders">
+          <!-- 骨架屏文件夹列表 -->
+          <div v-for="i in 3" :key="i" class="bg-white p-4 rounded-lg border border-gray-200 animate-pulse">
+            <div class="flex items-center space-x-3">
+              <!-- 文件夹图标骨架 -->
+              <div class="w-12 h-12 bg-gray-200 rounded"></div>
+              <div class="flex-1">
+                <!-- 文件夹名骨架 -->
+                <div class="h-4 bg-gray-200 rounded w-20 mb-2"></div>
+                <!-- 文件数量骨架 -->
+                <div class="h-3 bg-gray-200 rounded w-16"></div>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- 文件夹列表 -->
+        <div v-else v-for="folder in folders" 
              :key="folder.id" 
              class="relative group bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md cursor-pointer">
 
@@ -100,7 +119,60 @@
         
         <!-- 表格内容 - 可滚动区域 -->
         <div class="overflow-y-auto flex-1 bg-white" :style="{ maxHeight: fileListMaxHeight + 'px' }">
-          <div v-if="files.length === 0" class="flex items-center justify-center h-32 text-gray-500">
+          <!-- 加载动画 - 骨架屏效果 -->
+          <div v-if="isLoading" class="space-y-0 animate-fade-in">
+            <!-- 加载头部提示 -->
+            <div class="flex items-center justify-center py-8">
+              <div class="text-center">
+                <div class="relative mb-3">
+                  <!-- 外层旋转环 -->
+                  <div class="w-12 h-12 border-3 border-blue-100 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
+                  <!-- 内层图标 -->
+                  <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                    <i :class="[
+                      loadingType === 'search' ? 'fas fa-search' : 
+                      loadingType === 'folder' ? 'fas fa-folder' : 
+                      'fas fa-file-alt'
+                    ]" class="text-blue-500 text-lg"></i>
+                  </div>
+                </div>
+                <p class="text-gray-600 text-sm">
+                  {{ 
+                    loadingType === 'search' ? '正在搜索文件...' :
+                    loadingType === 'folder' ? '正在切换文件夹...' :
+                    '正在加载文件...'
+                  }}
+                </p>
+              </div>
+            </div>
+            
+            <!-- 骨架屏文件列表 -->
+            <div class="space-y-2">
+              <div v-for="i in 5" :key="i" class="px-6 py-3 animate-pulse">
+                <div class="grid grid-cols-4 gap-4 items-center">
+                  <!-- 文件名骨架 -->
+                  <div class="flex items-center">
+                    <div class="w-5 h-5 bg-gray-200 rounded mr-3"></div>
+                    <div class="h-4 bg-gray-200 rounded w-32"></div>
+                  </div>
+                  <!-- 大小骨架 -->
+                  <div class="text-center">
+                    <div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div>
+                  </div>
+                  <!-- 时间骨架 -->
+                  <div class="text-center">
+                    <div class="h-4 bg-gray-200 rounded w-20 mx-auto"></div>
+                  </div>
+                  <!-- 操作骨架 -->
+                  <div class="text-center">
+                    <div class="h-6 bg-gray-200 rounded w-12 mx-auto"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 空状态 -->
+          <div v-else-if="files.length === 0" class="flex items-center justify-center h-32 text-gray-500">
             <div class="text-center">
               <i class="fas fa-folder-open text-4xl mb-2"></i>
               <p>暂无文件</p>
@@ -372,7 +444,10 @@ import FilePreview from './FilePreview.vue';
 
 const currentFolder = ref('总览');
 const searchQuery = ref('');
-const showNewFolderModal = ref(false); 
+const showNewFolderModal = ref(false);
+const isLoading = ref(false);
+const loadingType = ref(''); // 加载类型：'files', 'search', 'folder'
+const isLoadingFolders = ref(false); // 文件夹加载状态 
 const showNewFolderModal_file = ref(false); 
 
 const newFolderName = ref(''); // 新增文件夹
@@ -444,21 +519,39 @@ const canner_addNewFolder_file = async() => {
 }
 
 const selectAllFolder = async () => {
-  const res = await selectAllFolderServer();
-  const foldersData = res.data.map((item: any, idx: number) => ({
-    ...item,
-    icon: folderIcons[idx % 7],
-    count: 0, // 先初始化为 0
-  }));
+  isLoadingFolders.value = true;
+  
+  // 确保加载动画至少显示300ms
+  const startTime = Date.now();
+  const minLoadingTime = 300;
+  
+  try {
+    const res = await selectAllFolderServer();
+    const foldersData = res.data.map((item: any, idx: number) => ({
+      ...item,
+      icon: folderIcons[idx % 7],
+      count: 0, // 先初始化为 0
+    }));
 
-  folders.value = foldersData;
+    folders.value = foldersData;
 
-  // 然后为每个文件夹获取文件数量
-  for (let i = 0; i < folders.value.length; i++) {
-    const folder = folders.value[i];
-    const count = await getFolderFileCount(folder.folder_name);
-    // 更新对应的文件夹数量
-    folders.value[i].count = count.toString();
+    // 然后为每个文件夹获取文件数量
+    for (let i = 0; i < folders.value.length; i++) {
+      const folder = folders.value[i];
+      const count = await getFolderFileCount(folder.folder_name);
+      // 更新对应的文件夹数量
+      folders.value[i].count = count.toString();
+    }
+  } finally {
+    // 确保最小加载时间
+    const elapsedTime = Date.now() - startTime;
+    const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+    
+    if (remainingTime > 0) {
+      await new Promise(resolve => setTimeout(resolve, remainingTime));
+    }
+    
+    isLoadingFolders.value = false;
   }
 };
 
@@ -707,19 +800,38 @@ function getFileIcon(filename: string) {
 const folderName = ref( { folder_name: "" } ); // 当前文件夹名称
 
 const selectAllFiles = async (folderName: string = "") => {
+  isLoading.value = true;
+  loadingType.value = folderName ? 'folder' : 'files';
+  
+  // 确保加载动画至少显示500ms
+  const startTime = Date.now();
+  const minLoadingTime = 500;
+  
+  try {
+    // 假设你有一个 API 可以获取所有文件
+    const res = await selectAllFileServer( { folder_name: folderName } );
 
-  // 假设你有一个 API 可以获取所有文件
-  const res = await selectAllFileServer( { folder_name: folderName } );
-
-  console.log(res.data);
-  // 假设 res.data 是文件数组
-  files.value = res.data.map((item: any, idx: number) => ({
-    id: idx + 1,
-    file_name: item.file_name,
-    file_path: item.file_path,
-    file_size: item.file_size + ' MB',
-    file_time: formatDateToYyyymmdd(item.file_time),
-  }));
+    console.log(res.data);
+    // 假设 res.data 是文件数组
+    files.value = res.data.map((item: any, idx: number) => ({
+      id: idx + 1,
+      file_name: item.file_name,
+      file_path: item.file_path,
+      file_size: item.file_size + ' MB',
+      file_time: formatDateToYyyymmdd(item.file_time),
+    }));
+  } finally {
+    // 确保最小加载时间
+    const elapsedTime = Date.now() - startTime;
+    const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+    
+    if (remainingTime > 0) {
+      await new Promise(resolve => setTimeout(resolve, remainingTime));
+    }
+    
+    isLoading.value = false;
+    loadingType.value = '';
+  }
 };
 
 function formatDateToYyyymmdd(dateStr: string): string {
@@ -808,6 +920,13 @@ const clearSearch = () => {
 }
 
 const selectAllFilesByKeyword = async (keyword: string) => {
+  isLoading.value = true;
+  loadingType.value = 'search';
+  
+  // 确保加载动画至少显示500ms
+  const startTime = Date.now();
+  const minLoadingTime = 500;
+  
   try {
     const res = await selectFilesByNameServer({ keyword }); // 假设接口支持 keyword 参数
     files.value = res.data.map((item: any) => ({
@@ -820,6 +939,17 @@ const selectAllFilesByKeyword = async (keyword: string) => {
   } catch (error) {
     console.error('搜索文件失败:', error);
     ElMessage.error('搜索文件失败');
+  } finally {
+    // 确保最小加载时间
+    const elapsedTime = Date.now() - startTime;
+    const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+    
+    if (remainingTime > 0) {
+      await new Promise(resolve => setTimeout(resolve, remainingTime));
+    }
+    
+    isLoading.value = false;
+    loadingType.value = '';
   }
 };
 
@@ -901,9 +1031,9 @@ const handlePreviewDownload = (fileInfo: any) => {
   downloadFile(fileInfo);
 };
 
-onMounted(() => {
+onMounted(async () => {
   selectAllFolder();
-  selectAllFiles(folderName.value.folder_name); // 获取所有文件
+  await selectAllFiles(folderName.value.folder_name); // 获取所有文件
   totalFiles();
   
   // 添加窗口大小变化监听器
@@ -922,6 +1052,22 @@ onUnmounted(() => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 1rem;
+}
+
+/* 淡入动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
 }
 
 select {

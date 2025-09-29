@@ -40,11 +40,23 @@
     <!-- 可滚动的内容区域 -->
     <div class="flex-1 overflow-y-auto scrollbar-hide">
       <!-- 模型卡片列表 -->
-      <div class="grid grid-cols-3 gap-4 px-4 pb-6">
-        <div
-            v-for="item in modelList"
-            :key="item.id"
-            class="bg-white rounded-xl shadow-sm border border-[#f0f0f0] p-6 hover:shadow-md transition-shadow flex flex-col h-full">
+      <div class="px-4 pb-6">
+        <!-- 加载动画 -->
+        <div v-if="isLoading" class="flex items-center justify-center h-64">
+          <div class="text-center">
+            <div class="relative mb-4">
+              <div class="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+              <i class="fas fa-brain text-blue-600 text-xl absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></i>
+            </div>
+            <p class="text-gray-600 text-sm">正在加载模型...</p>
+          </div>
+        </div>
+        <!-- 模型网格 -->
+        <div v-else class="grid grid-cols-3 gap-4">
+          <div
+              v-for="item in modelList"
+              :key="item.id"
+              class="bg-white rounded-xl shadow-sm border border-[#f0f0f0] p-6 hover:shadow-md transition-shadow flex flex-col h-full">
             <div class="flex flex-col gap-3 flex-1">
                 <div class="flex items-center gap-4">
                     <img
@@ -100,6 +112,7 @@ const searchQuery = ref('');
 const modelList = ref<any[]>([]);
 const allModels = ref<any[]>([]);
 const showAddModel = ref(false);
+const isLoading = ref(false);
 
 function handleSearch() {
   if (!searchQuery.value.trim()) {
@@ -128,6 +141,7 @@ function handleAddModel(modelName: string) {
 
 // 获取模型列表
 async function fetchModelList() {
+  isLoading.value = true;
   try {
     const res = await selectAllModelServer();
     // 适配 axios 返回结构
@@ -142,6 +156,8 @@ async function fetchModelList() {
     console.error('获取模型列表失败', e);
     allModels.value = [];
     modelList.value = [];
+  } finally {
+    isLoading.value = false;
   }
 }
 
