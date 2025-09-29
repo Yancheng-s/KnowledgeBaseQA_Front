@@ -78,12 +78,14 @@
       <!-- 文件表格 -->
       <div class="bg-white rounded-lg border border-gray-200 flex-1 flex flex-col shadow-sm">
         <!-- 表格头部 - 固定不滚动 -->
-        <div class="bg-gray-50 px-6 py-3 border-b border-gray-200">
-          <div class="grid grid-cols-4 gap-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
-            <div class="text-left">文件名</div>
-            <div class="text-left">大小</div>
-            <div class="text-left">上传时间</div>
-            <div class="text-right">操作</div>
+        <div class="bg-gray-50 border-b border-gray-200">
+          <div class="px-6 py-3">
+            <div class="grid grid-cols-4 gap-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <div class="text-center -ml-2">文件名</div>
+              <div class="text-center">大小</div>
+              <div class="text-center -ml-2">上传时间</div>
+              <div class="text-center">操作</div>
+            </div>
           </div>
         </div>
         
@@ -96,22 +98,26 @@
             </div>
           </div>
           <div v-else class="divide-y divide-gray-200">
-            <div v-for="file in files" :key="file.id" class="px-6 py-4 hover:bg-gray-50 bg-white">
-              <div class="grid grid-cols-4 gap-4 items-center">
-                <div class="flex items-center">
-                  <i :class="[getFileIcon(file.file_name), 'text-gray-400', 'mr-3']"></i>
-                  <span class="truncate">{{ file.file_name }}</span>
-                </div>
-                <div class="text-sm text-gray-500">
-                  {{ file.file_size }}
-                </div>
-                <div class="text-sm text-gray-500">
-                  {{ file.file_time }}
-                </div>
-                <div class="text-right text-sm font-medium">
-                  <button @click="previewFile(file)" class="text-blue-600 hover:text-blue-900 mr-3">预览</button>
-                  <button @click="downloadFile(file)" class="text-blue-600 hover:text-blue-900 mr-3">下载</button>
-                  <button @click="deleteFile(file)" class="text-red-600 hover:text-red-900">删除</button>
+            <div v-for="file in files" :key="file.id" class="hover:bg-gray-50 bg-white">
+              <div class="px-6 py-4">
+                <div class="grid grid-cols-4 gap-4 items-center">
+                  <div class="flex items-center justify-center">
+                    <div class="flex items-center -ml-1">
+                      <i :class="[getFileIcon(file.file_name), 'text-gray-400', 'mr-2']"></i>
+                      <span class="truncate">{{ file.file_name }}</span>
+                    </div>
+                  </div>
+                  <div class="text-sm text-gray-500 text-center">
+                    {{ file.file_size }}
+                  </div>
+                  <div class="text-sm text-gray-500 text-center -ml-1">
+                    {{ file.file_time }}
+                  </div>
+                  <div class="text-center text-sm font-medium">
+                    <button @click="previewFile(file)" class="text-blue-600 hover:text-blue-900 mr-3">预览</button>
+                    <button @click="downloadFile(file)" class="text-blue-600 hover:text-blue-900 mr-3">下载</button>
+                    <button @click="deleteFile(file)" class="text-red-600 hover:text-red-900">删除</button>
+                  </div>
                 </div>
               </div>
             </div>

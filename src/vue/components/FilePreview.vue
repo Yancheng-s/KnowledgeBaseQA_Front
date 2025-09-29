@@ -24,13 +24,6 @@
         </div>
         <div class="flex items-center space-x-1 flex-shrink-0">
           <button 
-            @click="downloadFile" 
-            class="group p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 hover:scale-105"
-            title="下载文件"
-          >
-            <i class="fas fa-download text-sm group-hover:animate-bounce"></i>
-          </button>
-          <button 
             @click="closePreview" 
             class="group p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 hover:scale-105"
             title="关闭预览"
@@ -116,15 +109,6 @@
                   <p class="text-xs text-gray-500">支持缩放、翻页等操作</p>
                 </div>
               </div>
-              <div class="flex items-center space-x-2">
-                <button 
-                  @click="downloadFile" 
-                  class="group px-3 py-1.5 text-xs bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 hover:scale-105 shadow-md"
-                >
-                  <i class="fas fa-download mr-1 group-hover:animate-bounce"></i>
-                  下载PDF
-                </button>
-              </div>
             </div>
             <div class="flex-1 relative min-h-0">
               <iframe 
@@ -147,15 +131,6 @@
               <div class="flex items-center space-x-2">
                 <i class="fas fa-file-alt text-blue-500"></i>
                 <span class="text-sm font-medium text-gray-700">文本预览</span>
-              </div>
-              <div class="flex items-center space-x-2">
-                <button 
-                  @click="downloadFile" 
-                  class="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
-                >
-                  <i class="fas fa-download mr-1"></i>
-                  下载
-                </button>
               </div>
             </div>
             <div class="flex-1 overflow-auto p-6">
@@ -206,67 +181,57 @@
         </div>
 
         <!-- Office文档预览 -->
-        <div v-else-if="previewType === 'office'" class="h-full flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4 overflow-auto">
-          <div class="text-center w-full max-w-4xl">
-            <div class="relative mb-6">
-              <div class="w-24 h-24 bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto shadow-xl">
-                <i class="fas fa-file-word text-4xl text-blue-600 animate-pulse"></i>
+        <div v-else-if="previewType === 'office'" class="h-full flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 p-6 overflow-auto">
+          <div class="text-center w-full max-w-3xl">
+            <!-- 文档图标 -->
+            <div class="relative mb-8">
+              <div class="w-32 h-32 bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto shadow-2xl">
+                <i class="fas fa-file-word text-5xl text-blue-600"></i>
               </div>
-              <div class="absolute -top-1 -right-1 w-6 h-6 bg-blue-500 rounded-full animate-ping"></div>
-              <div class="absolute -bottom-1 -left-1 w-4 h-4 bg-purple-500 rounded-full animate-ping" style="animation-delay: 0.5s"></div>
+              <div class="absolute -top-2 -right-2 w-8 h-8 bg-blue-500 rounded-full animate-ping opacity-75"></div>
+              <div class="absolute -bottom-2 -left-2 w-6 h-6 bg-purple-500 rounded-full animate-ping opacity-75" style="animation-delay: 0.3s"></div>
             </div>
-            <h3 class="text-2xl font-bold text-gray-800 mb-3">Office文档预览</h3>
-            <p class="text-gray-600 mb-8 text-lg max-w-2xl mx-auto">该文档类型需要下载后查看，或使用在线预览服务</p>
             
-            <!-- 预览和下载选项 -->
-            <div class="grid grid-cols-2 gap-4 max-w-2xl mx-auto">
-              <!-- 在线预览选项 -->
-              <div v-if="officePreviewUrls" class="space-y-4">
-                <h4 class="text-sm font-bold text-gray-700 text-center">在线预览</h4>
+            <!-- 标题和描述 -->
+            <h3 class="text-3xl font-bold text-gray-800 mb-4">Office文档预览</h3>
+            <p class="text-gray-600 mb-10 text-lg max-w-2xl mx-auto leading-relaxed">该文档类型需要下载后查看，或使用在线预览服务</p>
+            
+            <!-- 在线预览选项 -->
+            <div v-if="officePreviewUrls" class="max-w-2xl mx-auto">
+              <h4 class="text-lg font-semibold text-gray-700 mb-6">在线预览</h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Microsoft Office 按钮 -->
                 <button 
                   @click="openOfficePreview('microsoft_office')" 
-                  class="group w-full px-4 py-3 bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white rounded-lg hover:from-blue-700 hover:via-blue-800 hover:to-indigo-800 flex items-center justify-center transition-all duration-300 hover:scale-105 shadow-lg"
+                  class="group relative px-6 py-4 bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white rounded-xl hover:from-blue-700 hover:via-blue-800 hover:to-indigo-800 flex items-center justify-center transition-all duration-300 hover:scale-105 shadow-xl hover:shadow-2xl"
                 >
-                  <i class="fab fa-microsoft text-lg mr-2 group-hover:animate-bounce"></i>
-                  <div class="text-left">
-                    <div class="font-bold text-xs">Microsoft Office</div>
-                    <div class="text-xs opacity-90">官方预览</div>
+                  <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                      <i class="fab fa-microsoft text-xl"></i>
+                    </div>
+                    <div class="text-left">
+                      <div class="font-bold text-sm">Microsoft Office</div>
+                      <div class="text-xs opacity-90">官方预览</div>
+                    </div>
                   </div>
+                  <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 rounded-xl transition-opacity duration-300"></div>
                 </button>
+                
+                <!-- Google Docs 按钮 -->
                 <button 
                   @click="openOfficePreview('google_docs')" 
-                  class="group w-full px-4 py-3 bg-gradient-to-r from-red-600 via-red-700 to-pink-700 text-white rounded-lg hover:from-red-700 hover:via-red-800 hover:to-pink-800 flex items-center justify-center transition-all duration-300 hover:scale-105 shadow-lg"
+                  class="group relative px-6 py-4 bg-gradient-to-r from-red-600 via-red-700 to-pink-700 text-white rounded-xl hover:from-red-700 hover:via-red-800 hover:to-pink-800 flex items-center justify-center transition-all duration-300 hover:scale-105 shadow-xl hover:shadow-2xl"
                 >
-                  <i class="fab fa-google text-lg mr-2 group-hover:animate-bounce"></i>
-                  <div class="text-left">
-                    <div class="font-bold text-xs">Google Docs</div>
-                    <div class="text-xs opacity-90">在线预览</div>
+                  <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                      <i class="fab fa-google text-xl"></i>
+                    </div>
+                    <div class="text-left">
+                      <div class="font-bold text-sm">Google Docs</div>
+                      <div class="text-xs opacity-90">在线预览</div>
+                    </div>
                   </div>
-                </button>
-              </div>
-              
-              <!-- 下载选项 -->
-              <div class="space-y-4">
-                <h4 class="text-sm font-bold text-gray-700 text-center">下载文件</h4>
-                <button 
-                  @click="downloadFile" 
-                  class="group w-full px-4 py-3 bg-gradient-to-r from-green-600 via-green-700 to-emerald-700 text-white rounded-lg hover:from-green-700 hover:via-green-800 hover:to-emerald-800 transition-all duration-300 hover:scale-105 shadow-lg flex items-center justify-center"
-                >
-                  <i class="fas fa-download text-lg mr-2 group-hover:animate-bounce"></i>
-                  <div class="text-left">
-                    <div class="font-bold text-xs">服务器下载</div>
-                    <div class="text-xs opacity-90">通过服务器</div>
-                  </div>
-                </button>
-                <button 
-                  @click="downloadFromDataUrl" 
-                  class="group w-full px-4 py-3 bg-gradient-to-r from-purple-600 via-purple-700 to-violet-700 text-white rounded-lg hover:from-purple-700 hover:via-purple-800 hover:to-violet-800 transition-all duration-300 hover:scale-105 shadow-lg flex items-center justify-center"
-                >
-                  <i class="fas fa-download text-lg mr-2 group-hover:animate-bounce"></i>
-                  <div class="text-left">
-                    <div class="font-bold text-xs">直接下载</div>
-                    <div class="text-xs opacity-90">从浏览器</div>
-                  </div>
+                  <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 rounded-xl transition-opacity duration-300"></div>
                 </button>
               </div>
             </div>
@@ -281,16 +246,6 @@
             </div>
             <h3 class="text-xl font-semibold text-gray-800 mb-3">不支持预览</h3>
             <p class="text-gray-600 mb-6">该文件类型暂不支持在线预览</p>
-            <button 
-              @click="downloadFile" 
-              class="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 hover:scale-105 shadow-lg flex items-center mx-auto"
-            >
-              <i class="fas fa-download text-lg mr-3"></i>
-              <div class="text-left">
-                <div class="font-semibold">下载文件</div>
-                <div class="text-sm opacity-90">下载后查看</div>
-              </div>
-            </button>
           </div>
         </div>
       </div>
@@ -317,7 +272,6 @@ const props = defineProps<{
 // Emits
 const emit = defineEmits<{
   close: []
-  download: [fileInfo: any]
 }>()
 
 // 响应式数据
@@ -421,11 +375,6 @@ const retryPreview = () => {
   loadPreview()
 }
 
-// 下载文件
-const downloadFile = () => {
-  emit('download', props.fileInfo)
-  ElMessage.success('开始下载文件')
-}
 
 // 关闭预览
 const closePreview = () => {
@@ -443,29 +392,6 @@ const handlePreviewError = () => {
   error.value = '预览加载失败'
 }
 
-// 从data URL下载文件
-const downloadFromDataUrl = () => {
-  if (!dataUrl.value) return
-  
-  try {
-    const link = document.createElement('a')
-    link.href = dataUrl.value
-    link.download = props.fileInfo.file_name
-    link.style.display = 'none'
-    
-    document.body.appendChild(link)
-    link.click()
-    
-    setTimeout(() => {
-      document.body.removeChild(link)
-    }, 100)
-    
-    ElMessage.success(`开始下载文件: ${props.fileInfo.file_name}`)
-  } catch (error) {
-    console.error('下载文件失败:', error)
-    ElMessage.error('下载文件失败')
-  }
-}
 
 // 打开Office文档在线预览
 const openOfficePreview = (service: string) => {
