@@ -8,3 +8,9 @@ export const addKBS = (data) => {
 export const selectAllKBS = () => {
     return request.get('/selectAllKBS')
 }
+
+export const searchKBSByName = (keyword) => {
+    return request.get('/searchKBSByName', {
+        params: { keyword }
+    })
+}

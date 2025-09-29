@@ -9,15 +9,24 @@
           创建模型
         </button>
       </div>
-      <div class="relative">
-        <input 
-          type="text" 
-          placeholder="搜索模型名称" 
-          class="pl-10 pr-4 py-2 w-64 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          v-model="searchQuery"
-          @keyup.enter="handleSearch"
-        >
-        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+      <div class="flex items-center space-x-2">
+        <div class="relative">
+          <input 
+            type="text" 
+            placeholder="搜索模型名称" 
+            class="pl-10 pr-10 py-2 w-64 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            v-model="searchQuery"
+            @keyup.enter="handleSearch"
+          >
+          <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+          <button 
+            v-if="searchQuery"
+            @click="clearSearch"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
       </div>
     </div> 
 
@@ -89,11 +98,26 @@ import { selectAllModelServer } from '@/api/model.js';
 
 const searchQuery = ref('');
 const modelList = ref<any[]>([]);
+const allModels = ref<any[]>([]);
 const showAddModel = ref(false);
 
 function handleSearch() {
-  // 搜索逻辑
+  if (!searchQuery.value.trim()) {
+    // 如果搜索框为空，显示所有模型
+    modelList.value = allModels.value;
+    return;
+  }
+  
+  // 根据模型名称搜索
+  modelList.value = allModels.value.filter(model => 
+    model.model_name.toLowerCase().includes(searchQuery.value.toLowerCase())
+  );
 }
+
+const clearSearch = () => {
+  searchQuery.value = '';
+  modelList.value = allModels.value;
+};
 
 function handleAddModel(modelName: string) {
   // 这里可以添加模型的逻辑
@@ -108,12 +132,15 @@ async function fetchModelList() {
     const res = await selectAllModelServer();
     // 适配 axios 返回结构
     if (res && res.data && Array.isArray(res.data.data)) {
+      allModels.value = res.data.data;
       modelList.value = res.data.data;
     } else {
+      allModels.value = [];
       modelList.value = [];
     }
   } catch (e) {
     console.error('获取模型列表失败', e);
+    allModels.value = [];
     modelList.value = [];
   }
 }

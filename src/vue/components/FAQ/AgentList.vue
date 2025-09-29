@@ -9,15 +9,24 @@
           创建智能体
         </button>
       </div>
-      <div class="relative">
-        <input 
-          type="text" 
-          placeholder="搜索智能体名称" 
-          class="pl-10 pr-4 py-2 w-64 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          v-model="searchQuery"
-          @keyup.enter="handleSearch"
-        >
-        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+      <div class="flex items-center space-x-2">
+        <div class="relative">
+          <input 
+            type="text" 
+            placeholder="搜索智能体名称" 
+            class="pl-10 pr-10 py-2 w-64 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            v-model="searchQuery"
+            @keyup.enter="handleSearch"
+          >
+          <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+          <button 
+            v-if="searchQuery"
+            @click="clearSearch"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
       </div>
     </div> 
     
@@ -156,6 +165,10 @@ const applications = ref<Application[]>([
   }
 ]);
 
+// 搜索相关
+const searchQuery = ref('');
+const allApplications = ref<Application[]>([]);
+
 // 动态高度计算
 const windowHeight = ref(window.innerHeight);
 const agentListMaxHeight = computed(() => {
@@ -188,7 +201,7 @@ const handleResize = () => {
 
 const selectAllKBS = async () => {
   const res = await selectAllAgents();
-  applications.value = res.data.map((item: any) => {
+  const mappedData = res.data.map((item: any) => {
     return {
       id: item.agent_id,
       name: item.agent_name,
@@ -201,6 +214,28 @@ const selectAllKBS = async () => {
       }
     };
   });
+  
+  // 保存所有应用数据
+  allApplications.value = mappedData;
+  applications.value = mappedData;
+};
+
+const handleSearch = () => {
+  if (!searchQuery.value.trim()) {
+    // 如果搜索框为空，显示所有应用
+    applications.value = allApplications.value;
+    return;
+  }
+  
+  // 根据名称搜索
+  applications.value = allApplications.value.filter(app => 
+    app.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+  );
+};
+
+const clearSearch = () => {
+  searchQuery.value = '';
+  applications.value = allApplications.value;
 };
 
 async function createAgent() {

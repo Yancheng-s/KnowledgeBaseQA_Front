@@ -8,15 +8,24 @@
           创建知识库
         </button>
       </div>
-      <div class="relative">
-        <input 
-          type="text" 
-          placeholder="搜索知识库名称" 
-          class="pl-10 pr-4 py-2 w-64 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          v-model="searchQuery"
-          @keyup.enter="handleSearch"
-        >
-        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+      <div class="flex items-center space-x-2">
+        <div class="relative">
+          <input 
+            type="text" 
+            placeholder="搜索知识库名称" 
+            class="pl-10 pr-10 py-2 w-64 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            v-model="searchQuery"
+            @keyup.enter="handleSearch"
+          >
+          <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+          <button 
+            v-if="searchQuery"
+            @click="clearSearch"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -83,7 +92,7 @@
 </template>
 
 <script lang="ts" setup>
-import { selectAllKBS } from '@/api/KBS'
+import { selectAllKBS, searchKBSByName } from '@/api/KBS'
 import { onMounted, ref } from 'vue'
 
 const emit = defineEmits<{
@@ -92,9 +101,55 @@ const emit = defineEmits<{
 
 const searchQuery = ref('')
 
-const handleSearch = () => {
-  // 搜索逻辑
-  console.log('搜索:', searchQuery.value)
+const handleSearch = async () => {
+  if (!searchQuery.value.trim()) {
+    // 如果搜索框为空，显示所有知识库
+    loadAllKnowledgeBases()
+    return
+  }
+  
+  try {
+    const res = await searchKBSByName(searchQuery.value.trim())
+    console.log('搜索结果:', res)
+    
+    if (res && res.data) {
+      const mappedData = res.data.map((item: any) => ({
+        title: item.kon_name || '',
+        description: item.kon_describe || '',
+        certified: true,
+        count: getFileCount(item.file_list),
+        updateTime: item.update_time || ''
+      }))
+      
+      knowledgeList.value = mappedData
+    }
+  } catch (error) {
+    console.error('搜索失败:', error)
+  }
+}
+
+const loadAllKnowledgeBases = async () => {
+  try {
+    const res = await selectAllKBS()
+    console.log(res)
+    
+    const mappedData = res.data.map((item: any) => ({
+      title: item.kon_name || '',
+      description: item.kon_describe || '',
+      certified: true,
+      count: getFileCount(item.file_list),
+      updateTime: item.update_time || ''
+    }))
+
+    knowledgeList.value = mappedData
+  } catch (error) {
+    console.error('获取知识库列表失败:', error)
+  }
+}
+
+const clearSearch = () => {
+  searchQuery.value = ''
+  loadAllKnowledgeBases()
 }
 
 const knowledgeList = ref([
@@ -124,24 +179,7 @@ const getFileCount = (fileList: string): number => {
   }
 };
 
-// 调用 API 获取知识库列表
-selectAllKBS().then(res => {
-  console.log(res);
-  
-  const mappedData = res.data.map((item: any) => ({
-    title: item.kon_name || '',
-    description: item.kon_describe || '',
-    certified: true,
-    count: getFileCount(item.file_list),
-    updateTime: item.update_time || ''
-  }));
-
-  // 更新 knowledgeList
-  knowledgeList.value = mappedData;
-});
-
 onMounted(() => {
-  selectAllKBS();
-  
+  loadAllKnowledgeBases()
 })
 </script>

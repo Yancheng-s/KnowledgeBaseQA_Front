@@ -24,15 +24,24 @@
         </div>
         
         <div class="flex items-center space-x-4">
-          <div class="relative">
-            <input 
-              type="text" 
-              placeholder="搜索文件..." 
-              class="pl-10 pr-4 py-2 w-64 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              v-model="searchQuery"
-              @keyup.enter="handleSearch"
-            >
-            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+          <div class="flex items-center space-x-2">
+            <div class="relative">
+              <input 
+                type="text" 
+                placeholder="搜索文件..." 
+                class="pl-10 pr-10 py-2 w-64 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                v-model="searchQuery"
+                @keyup.enter="handleSearch"
+              >
+              <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+              <button 
+                v-if="searchQuery"
+                @click="clearSearch"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
           </div>
           <button @click="showUploadModal = true" class="!rounded-button flex items-center px-6 py-2 bg-blue-600 text-white hover:bg-blue-700">
             <i class="fas fa-cloud-upload-alt mr-2"></i>
@@ -80,12 +89,12 @@
         <!-- 表格头部 - 固定不滚动 -->
         <div class="bg-gray-50 border-b border-gray-200">
           <div class="px-6 py-3">
-            <div class="grid grid-cols-4 gap-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
-              <div class="text-center -ml-2">文件名</div>
-              <div class="text-center">大小</div>
-              <div class="text-center -ml-2">上传时间</div>
-              <div class="text-center">操作</div>
-            </div>
+             <div class="grid grid-cols-4 gap-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+               <div class="text-left">文件名</div>
+               <div class="text-center -ml-3">大小</div>
+               <div class="text-center -ml-7">上传时间</div>
+               <div class="text-center -ml-7">操作</div>
+             </div>
           </div>
         </div>
         
@@ -97,26 +106,43 @@
               <p>暂无文件</p>
             </div>
           </div>
-          <div v-else class="divide-y divide-gray-200">
-            <div v-for="file in files" :key="file.id" class="hover:bg-gray-50 bg-white">
-              <div class="px-6 py-4">
+          <div v-else class="divide-y divide-gray-100">
+            <div v-for="file in files" :key="file.id" class="hover:bg-gray-50 bg-white transition-colors duration-150">
+              <div class="px-6 py-3">
                 <div class="grid grid-cols-4 gap-4 items-center">
-                  <div class="flex items-center justify-center">
-                    <div class="flex items-center -ml-1">
-                      <i :class="[getFileIcon(file.file_name), 'text-gray-400', 'mr-2']"></i>
-                      <span class="truncate">{{ file.file_name }}</span>
+                  <!-- 文件名列 -->
+                  <div class="flex items-center">
+                    <div class="flex items-center min-w-0">
+                      <div class="w-5 h-5 bg-gray-100 rounded flex items-center justify-center mr-2">
+                        <i :class="[getFileIcon(file.file_name)]"></i>
+                      </div>
+                      <span class="truncate text-sm font-medium text-gray-900">{{ file.file_name }}</span>
                     </div>
                   </div>
-                  <div class="text-sm text-gray-500 text-center">
+                  <!-- 大小列 -->
+                  <div class="text-sm text-gray-600 text-center font-medium">
                     {{ file.file_size }}
                   </div>
-                  <div class="text-sm text-gray-500 text-center -ml-1">
+                  <!-- 时间列 -->
+                  <div class="text-sm text-gray-600 text-center -ml-1 font-medium">
                     {{ file.file_time }}
                   </div>
-                  <div class="text-center text-sm font-medium">
-                    <button @click="previewFile(file)" class="text-blue-600 hover:text-blue-900 mr-3">预览</button>
-                    <button @click="downloadFile(file)" class="text-blue-600 hover:text-blue-900 mr-3">下载</button>
-                    <button @click="deleteFile(file)" class="text-red-600 hover:text-red-900">删除</button>
+                  <!-- 操作列 -->
+                  <div class="text-center text-sm">
+                    <div class="flex items-center justify-center space-x-2">
+                      <button @click="previewFile(file)" 
+                              class="px-2 py-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors duration-150">
+                        预览
+                      </button>
+                      <button @click="downloadFile(file)" 
+                              class="px-2 py-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors duration-150">
+                        下载
+                      </button>
+                      <button @click="deleteFile(file)" 
+                              class="px-2 py-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors duration-150">
+                        删除
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -231,7 +257,9 @@
           <ul class="space-y-2">
             <li v-for="(file, index) in selectedFiles" :key="index" class="flex justify-between items-center bg-gray-100 p-2 rounded">
               <div class="flex items-center">
-                <i :class="[getFileIcon(file.name), 'text-gray-400', 'mr-3']"></i>
+                <div class="w-5 h-5 bg-gray-100 rounded flex items-center justify-center mr-3">
+                  <i :class="[getFileIcon(file.name)]"></i>
+                </div>
                 <span>{{ file.name }}</span>
               </div>
               <button @click="removeFile(index)" class="text-red-500 hover:text-red-700">
@@ -704,13 +732,17 @@ function formatDateToYyyymmdd(dateStr: string): string {
 }
 
 const enterFirstFolder = async () => {
-  currentFolder.value = "";
+  // 退出搜索状态
+  isSearching.value = false;
+  searchQuery.value = '';
   currentFolder.value = "总览";
   await selectAllFiles(); // 根据文件夹名称刷新文件列表
 };
 
 const enterFolder = async (folderName: string) => {
-  currentFolder.value = "";
+  // 退出搜索状态
+  isSearching.value = false;
+  searchQuery.value = '';
   currentFolder.value = folderName;
   await selectAllFiles(folderName); // 根据文件夹名称刷新文件列表
 };
@@ -757,11 +789,22 @@ const handleResize = () => {
 };
 
 function handleSearch() {
-  if (searchQuery.value.trim()) {
-    isSearching.value = true;
-    currentFolder.value = '搜索结果';
-    selectAllFilesByKeyword(searchQuery.value.trim());
+  if (!searchQuery.value.trim()) {
+    // 如果搜索框为空，退出搜索状态
+    clearSearch();
+    return;
   }
+  
+  isSearching.value = true;
+  currentFolder.value = '搜索结果';
+  selectAllFilesByKeyword(searchQuery.value.trim());
+}
+
+const clearSearch = () => {
+  searchQuery.value = '';
+  isSearching.value = false;
+  currentFolder.value = '总览';
+  selectAllFiles();
 }
 
 const selectAllFilesByKeyword = async (keyword: string) => {
@@ -892,6 +935,38 @@ select {
 .overflow-hidden {
   overflow: hidden;
 }
+
+/* 覆盖全局的文件图标颜色样式 */
+.fa-file-pdf,
+.fa-file-word,
+.fa-file-excel,
+.fa-file-powerpoint,
+.fa-file-image,
+.fa-file-video,
+.fa-file-audio,
+.fa-file-archive,
+.fa-file-alt,
+.fa-file-code,
+.fa-file {
+  color: #6b7280 !important;
+  font-size: 0.875rem !important;
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-style: normal !important;
+  font-weight: normal !important;
+  text-decoration: none !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  word-wrap: normal !important;
+  white-space: nowrap !important;
+  direction: ltr !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
 
 </style>
 
