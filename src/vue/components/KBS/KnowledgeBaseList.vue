@@ -84,14 +84,14 @@
               </td>
               <!-- 操作 -->
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button class="text-blue-600 hover:text-blue-700 mr-4">
-                  <i></i>查看
+                <button @click="handleView(item)" class="text-blue-600 hover:text-blue-700 mr-4">
+                  <i class="fas fa-eye mr-1"></i>查看
                 </button>
-                <button class="text-gray-600 hover:text-gray-700 mr-4">
-                  <i></i>编辑
+                <button @click="handleEdit(item)" class="text-gray-600 hover:text-gray-700 mr-4">
+                  <i class="fas fa-edit mr-1"></i>编辑
                 </button>
                 <button @click="handleDelete(item)" class="text-red-600 hover:text-red-700">
-                  <i></i>删除
+                  <i class="fas fa-trash mr-1"></i>删除
                 </button>
               </td>
             </tr>
@@ -109,6 +109,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 
 const emit = defineEmits<{
   (e: 'create'): void
+  (e: 'view', knowledgeBase: any): void
+  (e: 'edit', knowledgeBase: any): void
 }>()
 
 const searchQuery = ref('')
@@ -126,7 +128,19 @@ const handleSearch = async () => {
     const res = await searchKBSByName(searchQuery.value.trim())
     console.log('搜索结果:', res)
     
-    if (res && res.data) {
+    // 后端直接返回数组，不是包装在data字段中
+    if (res && Array.isArray(res)) {
+      const mappedData = res.map((item: any) => ({
+        title: item.kon_name || '',
+        description: item.kon_describe || '',
+        certified: true,
+        count: getFileCount(item.file_list),
+        updateTime: item.update_time || ''
+      }))
+      
+      knowledgeList.value = mappedData
+    } else if (res && res.data && Array.isArray(res.data)) {
+      // 兼容可能的data包装格式
       const mappedData = res.data.map((item: any) => ({
         title: item.kon_name || '',
         description: item.kon_describe || '',
@@ -136,9 +150,13 @@ const handleSearch = async () => {
       }))
       
       knowledgeList.value = mappedData
+    } else {
+      // 如果没有数据，显示空列表
+      knowledgeList.value = []
     }
   } catch (error) {
     console.error('搜索失败:', error)
+    ElMessage.error('搜索失败，请重试')
   } finally {
     isLoading.value = false
   }
@@ -148,19 +166,37 @@ const loadAllKnowledgeBases = async () => {
   isLoading.value = true
   try {
     const res = await selectAllKBS()
-    console.log(res)
+    console.log('获取所有知识库:', res)
     
-    const mappedData = res.data.map((item: any) => ({
-      title: item.kon_name || '',
-      description: item.kon_describe || '',
-      certified: true,
-      count: getFileCount(item.file_list),
-      updateTime: item.update_time || ''
-    }))
-
-    knowledgeList.value = mappedData
+    // 后端直接返回数组，不是包装在data字段中
+    if (res && Array.isArray(res)) {
+      const mappedData = res.map((item: any) => ({
+        title: item.kon_name || '',
+        description: item.kon_describe || '',
+        certified: true,
+        count: getFileCount(item.file_list),
+        updateTime: item.update_time || ''
+      }))
+      
+      knowledgeList.value = mappedData
+    } else if (res && res.data && Array.isArray(res.data)) {
+      // 兼容可能的data包装格式
+      const mappedData = res.data.map((item: any) => ({
+        title: item.kon_name || '',
+        description: item.kon_describe || '',
+        certified: true,
+        count: getFileCount(item.file_list),
+        updateTime: item.update_time || ''
+      }))
+      
+      knowledgeList.value = mappedData
+    } else {
+      // 如果没有数据，显示空列表
+      knowledgeList.value = []
+    }
   } catch (error) {
     console.error('获取知识库列表失败:', error)
+    ElMessage.error('获取知识库列表失败，请重试')
   } finally {
     isLoading.value = false
   }
@@ -169,6 +205,15 @@ const loadAllKnowledgeBases = async () => {
 const clearSearch = () => {
   searchQuery.value = ''
   loadAllKnowledgeBases()
+}
+
+// 查看知识库
+const handleView = (item: any) => {
+  emit('view', item)
+}
+
+const handleEdit = (item: any) => {
+  emit('edit', item)
 }
 
 // 删除知识库

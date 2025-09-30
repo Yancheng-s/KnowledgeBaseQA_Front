@@ -20,3 +20,15 @@ export const deleteKBSByName = (kon_name) => {
         params: { kon_name }
     })
 }
+
+export const getKnowledgeBaseDetail = (kon_name) => {
+    return request.get('/getKnowledgeBaseDetail', {
+        params: { kon_name }
+    })
+}
+
+export const updateKBSByOriginalName = (original_kon_name, data) => {
+    return request.put('/updateKBSByOriginalName', data, {
+        params: { original_kon_name }
+    })
+}
