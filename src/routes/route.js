@@ -3,13 +3,13 @@ import { createRouter, createWebHistory } from 'vue-router'
 const routes = [
   {
     path: '/',
-    redirect: '/chat'
-  },
-  {
-    path: '/',
     name: 'index',
     component: () => import('@/vue/index.vue'),
     children: [
+      {
+        path: '',
+        redirect: '/chat'
+      },
       {
         path: 'chat',
         name: 'chat',

@@ -40,8 +40,11 @@ function createMainWindow() {
   }
 
   mainWindow.once('ready-to-show', () => {
-    mainWindow.show();
-    console.log('✅ Main window displayed');
+    // 等待Vue应用完全加载
+    setTimeout(() => {
+      mainWindow.show();
+      console.log('✅ Main window displayed');
+    }, 1000); // 额外等待1秒确保Vue应用完全初始化
   });
 
   return mainWindow;

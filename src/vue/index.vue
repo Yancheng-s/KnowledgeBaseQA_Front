@@ -95,6 +95,7 @@ const updateOnlineStatus = () => {
 };
 
 onMounted(() => {
+  console.log('🎯 主页面组件已挂载');
   updateOnlineStatus();
   window.addEventListener('online', updateOnlineStatus);
   window.addEventListener('offline', updateOnlineStatus);

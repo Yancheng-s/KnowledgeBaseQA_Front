@@ -21,7 +21,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import CreateAgent from './FAQ/CreateAgent.vue'
 import AgentList from './FAQ/AgentList.vue'
 
@@ -33,4 +33,8 @@ const handleCreateAgent = (agentId: number | null) => {
   showCreateForm.value = true;
   currentAgentId.value = agentId;
 };
+
+onMounted(() => {
+  console.log('🎯 FAQ组件已挂载');
+});
 </script>
