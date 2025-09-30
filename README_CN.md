@@ -44,9 +44,6 @@ LangFlow Chat 是一个基于 Vue 3 + Vite + Electron 的智能知识问答管�
 | 文件预览-工具选择 | /upload | `file-preview-list.png` | ![文件预览-工具选择](./docs/assets/file-preview-list.png) |
 | 文件预览-详情视图 | /upload | `file-preview-detail.png` | ![文件预览-详情视图](./docs/assets/file-preview-detail.png) |
 | 模型广场 | /models | `model-square.png` | ![模型广场](./docs/assets/model-square.png) |
-| 模型列表 | /models | `model-list.png` | ![模型列表](./docs/assets/model-list.png) |
-| 添加模型 | /models | `add-model.png` | ![添加模型](./docs/assets/add-model.png) |
-| 模型选择对话框 | /models | `model-select-dialog.png` | ![模型选择对话框](./docs/assets/model-select-dialog.png) |
 
 > 截图存放路径：**`docs/assets/`**，命名务必与上表一致，推送后即自动加载。
 

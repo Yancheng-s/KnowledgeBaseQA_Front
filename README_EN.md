@@ -45,9 +45,6 @@ The digital human and agent frontend and backend projects are stored in separate
 | File Preview - List View | /upload | `file-preview-list.png` | ![File Preview - List View](./docs/assets/file-preview-list.png) |
 | File Preview - Detail View | /upload | `file-preview-detail.png` | ![File Preview - Detail View](./docs/assets/file-preview-detail.png) |
 | Model Marketplace | /models | `model-square.png` | ![Model Marketplace](./docs/assets/model-square.png) |
-| Model List | /models | `model-list.png` | ![Model List](./docs/assets/model-list.png) |
-| Add Model | /models | `add-model.png` | ![Add Model](./docs/assets/add-model.png) |
-| Model Selection Dialog | /models | `model-select-dialog.png` | ![Model Selection Dialog](./docs/assets/model-select-dialog.png) |
 
 > Screenshot storage path: **`docs/assets/`**, naming must be consistent with the table above, automatically loaded after push.
 
