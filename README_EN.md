@@ -6,9 +6,9 @@ LangFlow Chat is an intelligent knowledge Q&A management system based on Vue 3 +
 
 The digital human and agent frontend and backend projects are stored in separate code repositories:
 
-1. Frontend code repository: https://gitee.com/garveyer/lang-flow_3-d-digital-human_-front
+1. Frontend code repository: https://github.com/Yancheng-s/KnowledgeBaseQA_Front
 
-2. Backend code repository: https://gitee.com/garveyer/lang-flow_3-d-digital-human_-back
+2. Backend code repository: https://github.com/Yancheng-s/KnowledgeBaseQA_Back
 
 ## Technology Stack
 
